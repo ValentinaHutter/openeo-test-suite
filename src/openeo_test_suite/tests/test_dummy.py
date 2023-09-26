@@ -1,4 +1,2 @@
-
-
-def test_dummy():
-    assert True
+def test_backend_url(backend_url):
+    assert backend_url
