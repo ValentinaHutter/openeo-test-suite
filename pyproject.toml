@@ -10,6 +10,7 @@ readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
     "pytest>=7.4",
+    "openeo>=0.24.0",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",

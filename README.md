@@ -3,6 +3,52 @@
 
 Test suite for validation of openEO back-ends against the openEO API and related specifications.
 
+## Install/Setup
+
+
+As always in Python usage and development,
+it is recommended to work in some sort of virtual environment (`venv`, `virtualenv`, `conda`, `docker`, ...)
+to run and develop this project.
+Depending on your use case and workflow, you can choose to reuse an existing environment or create a new one.
+
+### Example virtual environment setup
+
+Python's standard library includes a [`venv` module](https://docs.python.org/3/library/venv.html)
+to create virtual environments.
+A common practice is to create a virtual environment in a subdirectory `venv` of your project,
+which can be achieved by running this from the project root:
+
+```bash
+python -m venv --prompt . venv
+```
+
+Note: the `--prompt .` option is a trick to automatically
+use the project root directory name in your shell prompt
+when the virtual environment is activated.
+It's optional, but it generally makes your life easier
+when you have multiple virtual environments on your system.
+
+### Virtual environment activation
+
+The following instructions will assume that the virtual environment of your choosing is activated.
+For example, when using the `venv` approach from above,
+activate the virtual environment in your shell with:
+
+```bash
+source venv/bin/activate
+```
+
+### Install dependencies
+
+Install the project and its dependencies in your virtual environment with:
+
+```bash
+pip install -e .
+```
+
+Note: the `-e` option installs the project in "editable" mode,
+which makes sure that code changes will be reflected immediately in your virtual environment
+without the need of (re)installing the project.
 
 
 ## Running the test suite

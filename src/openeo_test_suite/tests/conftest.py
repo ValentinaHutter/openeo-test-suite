@@ -1,5 +1,7 @@
 import logging
 import os
+
+import openeo
 import pytest
 
 _log = logging.getLogger(__name__)
@@ -35,3 +37,29 @@ def backend_url(request) -> str:
     _log.info(f"Using openEO back-end URL {url!r}")
 
     return url
+
+
+@pytest.fixture
+def auto_authenticate() -> bool:
+    """
+    Fixture to act as parameterizable toggle for authenticating the connection fixture.
+    Allows per-test/folder configuration of auto-authentication.
+    """
+    return False
+
+
+@pytest.fixture
+def connection(backend_url: str, auto_authenticate: bool, capfd) -> openeo.Connection:
+    con = openeo.connect(backend_url, auto_validate=False)
+
+    if auto_authenticate:
+        # Temporarily disable output capturing, to make sure that OIDC device code instructions (if any) are visible to the user.
+        with capfd.disabled():
+            # Note: this generic `authenticate_oidc()` call allows both:
+            # - device code/refresh token based authentication for manual test suite runs
+            # - client credentials auth through env vars for automated/Jenkins CI runs
+            #
+            # See https://open-eo.github.io/openeo-python-client/auth.html#oidc-authentication-dynamic-method-selection
+            con.authenticate_oidc()
+
+    return con
