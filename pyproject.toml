@@ -18,6 +18,12 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
+[project.optional-dependencies]
+Dask = [
+    "openeo-pg-parser-networkx>=2023.11.0",
+    "openeo-processes-dask>=2023.11.6"
+]
+
 [tool.pytest.ini_options]
 testpaths = [
     "src/openeo_test_suite/tests",
