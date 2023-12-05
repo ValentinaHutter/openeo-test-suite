@@ -169,3 +169,6 @@ poetry.toml
 
 # LSP config files
 pyrightconfig.json
+
+# requests cache file
+openeo-processes-tests.sqlite
