@@ -1,41 +1,37 @@
+import json5
 import math
+from pathlib import Path
 import pytest
-import requests_cache
 import warnings
 
-spec_url = "https://raw.githubusercontent.com/Open-EO/openeo-processes/add-tests/tests/{}.json5"
+examples_path = "assets/processes/tests/*.json5"
 
 def add_id(test, id):
     test["process_id"] = id
     return test
 
-def get_examples(url_template, ids):
+def get_examples():
     examples = []
-    for id in ids:
-        session = requests_cache.CachedSession("openeo-processes-tests", expire_after=12*60*60) # cache for 12 hours
+    package_root_folder = Path(__file__).parents[5]
+    files = package_root_folder.glob(examples_path)
+    for file in files:
+        id = file.stem
         try:
-            url = url_template.format(id)
-            data = session.get(url).json()
-            examples += map(lambda test: add_id(test, id), data["tests"])
-        except:
-            warnings.warn("No tests available for process " + id)
+            with file.open() as f:
+                data = json5.load(f)
+                examples += map(lambda test: add_id(test, id), data["tests"])
+        except Exception as e:
+            warnings.warn(f"Failed to load {file} due to {e}")
     
     return examples
 
-def get_test_parameters():
-    # todo: how can we access the connection or parameter here to create a new one?
-    from openeo_test_suite.lib.dask import dask_connection
-    connection = dask_connection()
-
-    process_ids = map(lambda process: process["id"], connection.list_processes())
-    return pytest.mark.parametrize(
-        "example", 
-        get_examples(spec_url, process_ids)
-    )
-
-pytestmark = get_test_parameters()
-
+@pytest.mark.parametrize("example", get_examples())
 def test_process(connection, example):
+    try:
+        connection.describe_process(example["process_id"])
+    except:
+        pytest.skip("Process {} not supported by the backend".format(example["process_id"]))
+
     pg = {
         "process_graph": {
             "node": {
@@ -48,25 +44,58 @@ def test_process(connection, example):
 
     # todo: handle experimental processes (warning instead of error?)
     experimental = example["experimental"] if "experimental" in example else False
+    throws = bool(example["throws"]) if "throws" in example else False
+    returns = "returns" in example
 
-    if "throws" in example and not "returns" in example:
-        with pytest.raises(Exception):
-            # todo: check that the exception is of the right type (if example["throws"] is given as string)
-            result = connection.execute(pg)
-    else:
+    try:
         result = connection.execute(pg)
+    except Exception as e:
+        result = e
 
-    # todo: handle external references to files
-    # todo: handle labeled arrays
-    # todo: handle datacube metadata
-    if "throws" in example and "returns" in example:
-        # todo: handle exceptions correctly
-        warnings.warn("Can't handle throws and returns at the same time yet")
-    elif math.isnan(example["returns"]):
-        assert math.isnan(result)
-    elif isinstance(example["returns"], float):
+    if throws and returns:
+        if isinstance(result, Exception):
+            check_exception(example, result)
+        else:
+            check_return_value(example, result)
+    elif throws:
+        check_exception(example, result)
+    elif returns:
+        check_return_value(example, result)
+    else:
+        pytest.skip("Test doesn't provide an expected result")
+
+
+def check_exception(example, result):
+    assert isinstance(result, Exception)
+    if isinstance(example["throws"], str):
+        if result.__class__.__name__ != example["throws"]:
+            warnings.warn(f"Expected exception {example['throws']} but got {result.__class__.__name__}")
+        # todo: we should enable this end remove the two lines above, but right now tooling doesn't really implement this
+        # assert result.__class__.__name__ == example["throws"]
+
+def check_return_value(example, result):
+    for name in example["arguments"]:
+        arg = example["arguments"][name]
+        # handle external references to files
+        if isinstance(arg, dict) and "$ref" in arg:
+            pytest.skip("external references to files not implemented yet") # todo
+        # handle custom types of data
+        elif isinstance(arg, dict) and "type" in arg:
+            # labeled arrays
+            if arg["type"] == "labeled-array":
+                pytest.skip("labeled arrays not implemented yet") # todo
+            # datacubes
+            elif arg["type"] == "datacube":
+                pytest.skip("datacubes not implemented yet") # todo
+
+    if isinstance(example["returns"], float):
         assert isinstance(result, float)
-        delta = example["delta"] if "delta" in example else 0.0000000001
-        assert result == pytest.approx(example["returns"], delta)
+        if math.isnan(example["returns"]):
+            # handle NaN (not a number) specifically
+            assert math.isnan(result)
+        else:
+            # handle numerical data with a delta
+            delta = example["delta"] if "delta" in example else 0.0000000001
+            assert result == pytest.approx(example["returns"], delta)
     else:
         assert result == example["returns"]
