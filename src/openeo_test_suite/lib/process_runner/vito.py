@@ -1,6 +1,6 @@
 from openeo_test_suite.lib.process_runner.base import ProcessTestRunner
 from openeo_driver.ProcessGraphDeserializer import process_registry_2xx
-import numpy
+from openeo_test_suite.lib.process_runner.util import numpy_to_native, xarray_to_datacube, datacube_to_xarray
 
 class Vito(ProcessTestRunner):
 
@@ -15,12 +15,10 @@ class Vito(ProcessTestRunner):
     fn = process_registry_2xx.get_function(node["process_id"])
     return fn(node["arguments"], env=None)
 
-  def decode_data(self, data):
-    # Converting numpy dtypes to native python types
-    if isinstance(data, numpy.generic):
-      if data.size == 1:
-        return data.item()
-      elif data.size > 1:
-        return data.tolist()
+  def encode_datacube(self, data):
+    return datacube_to_xarray(data)
 
+  def decode_data(self, data):
+    data = numpy_to_native(data)
+    data = xarray_to_datacube(data)
     return data

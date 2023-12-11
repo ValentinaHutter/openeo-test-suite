@@ -1,12 +1,12 @@
 import importlib
 import inspect
-import numpy
 
 from openeo_pg_parser_networkx import OpenEOProcessGraph, ProcessRegistry
 from openeo_processes_dask.process_implementations.core import process
 from openeo_pg_parser_networkx.process_registry import Process
 
 from openeo_test_suite.lib.process_runner.base import ProcessTestRunner
+from openeo_test_suite.lib.process_runner.util import numpy_to_native, xarray_to_datacube, datacube_to_xarray
 
 def create_process_registry():
   process_registry = ProcessRegistry(wrap_funcs=[process])
@@ -47,12 +47,10 @@ class Dask(ProcessTestRunner):
     callable = parsed.to_callable(process_registry = registry)
     return callable()
 
-  def decode_data(self, data):
-    # Converting numpy dtypes to native python types
-    if isinstance(data, numpy.ndarray) or isinstance(data, numpy.generic):
-      if data.size == 1:
-        return data.item()
-      elif data.size > 1:
-        return data.tolist()
+  def encode_datacube(self, data):
+    return datacube_to_xarray(data)
 
+  def decode_data(self, data):
+    data = numpy_to_native(data)
+    data = xarray_to_datacube(data)
     return data

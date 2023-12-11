@@ -1,7 +1,8 @@
 import json5
 import math
-from pathlib import Path
+from pathlib import Path, posixpath
 import pytest
+import xarray as xr
 import warnings
 
 # glob path to the test files
@@ -21,14 +22,14 @@ def get_examples():
         try:
             with file.open() as f:
                 data = json5.load(f)
-                examples += map(lambda test: [id, test], data["tests"])
+                examples += map(lambda test: [id, test, file], data["tests"])
         except Exception as e:
             warnings.warn("Failed to load {} due to {}".format(file, e))
     
     return examples
 
-@pytest.mark.parametrize("id,example", get_examples())
-def test_process(connection, id, example):
+@pytest.mark.parametrize("id,example,file", get_examples())
+def test_process(connection, id, example, file):
     # check whether the process is available
     try:
         connection.describe_process(id)
@@ -46,7 +47,7 @@ def test_process(connection, id, example):
     # prepare the arguments from test JSON encoding to internal backend representations
     # or skip if not supported by the test runner
     try:
-        arguments = prepare_arguments(example["arguments"], connection)
+        arguments = prepare_arguments(example["arguments"], connection, file)
     except Exception as e:
         pytest.skip(str(e))
 
@@ -85,25 +86,52 @@ def test_process(connection, id, example):
     else:
         pytest.skip("Test doesn't provide an expected result")
 
-def prepare_arguments(arguments, connection):
+def prepare_arguments(arguments, connection, file):
     for name in arguments:
         arg = arguments[name]
+
         # handle external references to files
         if isinstance(arg, dict) and "$ref" in arg:
-            raise Exception("external references to files not implemented yet")
+            arg = load_ref(arg["$ref"], file)
+
         # handle custom types of data
-        elif isinstance(arg, dict) and "type" in arg:
+        if isinstance(arg, dict) and "type" in arg:
             # labeled arrays
             if arg["type"] == "labeled-array":
                 arg = connection.encode_labeled_array(arg)
             # datacubes
             elif arg["type"] == "datacube":
+                if "data" in arg:
+                    arg["data"] = load_datacube(arg)
                 arg = connection.encode_datacube(arg)
 
         if connection.is_json_only():
             check_non_json_values(arg)
     
     return arguments
+
+def load_datacube(cube):
+    if isinstance(cube["data"], str):
+        path = posixpath.join(cube["path"], cube["data"])
+        if path.endswith(".nc"):
+            return xr.open_dataarray(path)
+        else:
+            raise Exception("Datacubes from non-netCDF files not implemented yet")
+    else:
+        return cube["data"]
+
+def load_ref(ref, file):
+    if ref.endswith(".json") or ref.endswith(".json5"):
+        try:
+            path = posixpath.join(file.parent, ref)
+            with open(path) as f:
+                data = json5.load(f)
+                data["path"] = path
+                return data
+        except Exception as e:
+            raise Exception("Failed to load external reference {}: {}".format(ref, e))
+    else:
+        raise Exception("External references to non-JSON files not implemented yet")
 
 def check_non_json_values(value):
     if isinstance(value, float):
