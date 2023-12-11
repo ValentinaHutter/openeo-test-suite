@@ -56,15 +56,12 @@ without the need of (re)installing the project.
 The test suite at least requires an openEO backend URL to run against.
 It can be specified through a `pytest` command line option
 
-    pytest --openeo-backend-url=openeo.example
+    pytest --openeo-backend-url=https://openeo.example
 
 or through an environment variable `OPENEO_BACKEND_URL`
 
-    export OPENEO_BACKEND_URL=openeo.example
+    export OPENEO_BACKEND_URL=https://openeo.example
     pytest
-
-If no explicit protocol is specified, `https://` will be assumed automatically.
-
 
 
 ## Development and contributions
