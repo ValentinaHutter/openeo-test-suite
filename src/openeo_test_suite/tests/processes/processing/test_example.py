@@ -5,6 +5,7 @@ from pathlib import Path, posixpath
 import json5
 import pytest
 import xarray as xr
+from deepdiff import DeepDiff
 
 # glob path to the test files
 examples_path = "assets/processes/tests/*.json5"
@@ -70,29 +71,18 @@ def test_process(connection, process_levels, processes, id, example, file, level
     # prepare the arguments from test JSON encoding to internal backend representations
     # or skip if not supported by the test runner
     try:
-        arguments = prepare_arguments(example["arguments"], connection, file)
+        arguments = prepare_arguments(example["arguments"], id, connection, file)
     except Exception as e:
         pytest.skip(str(e))
-
-    # build the process to run
-    pg = {
-        "process_graph": {
-            "node": {
-                "process_id": id,
-                "arguments": arguments,
-                "result": True,
-            }
-        }
-    }
 
     # todo: handle experimental processes (warning instead of error?)
     experimental = example["experimental"] if "experimental" in example else False
     throws = bool(example["throws"]) if "throws" in example else False
     returns = "returns" in example
 
-    # execute the process (synchronously)
+    # execute the process
     try:
-        result = connection.execute(pg)
+        result = connection.execute(id, arguments)
     except Exception as e:
         result = e
 
@@ -110,25 +100,27 @@ def test_process(connection, process_levels, processes, id, example, file, level
         pytest.skip("Test doesn't provide an expected result")
 
 
-def prepare_arguments(arguments, connection, file):
+def prepare_arguments(arguments, process_id, connection, file):
     for name in arguments:
         arg = arguments[name]
 
         # handle external references to files
         if isinstance(arg, dict) and "$ref" in arg:
-            raise Exception("Loading external references is not implemented yet")
-            # arg = load_ref(arg["$ref"], file)
+            arg = load_ref(arg["$ref"], file)
 
         # handle custom types of data
-        if isinstance(arg, dict) and "type" in arg:
-            # labeled arrays
-            if arg["type"] == "labeled-array":
-                arg = connection.encode_labeled_array(arg)
-            # datacubes
-            elif arg["type"] == "datacube":
-                if "data" in arg:
-                    arg["data"] = load_datacube(arg)
-                arg = connection.encode_datacube(arg)
+        if isinstance(arg, dict):
+            if "type" in arg:
+                # labeled arrays
+                if arg["type"] == "labeled-array":
+                    arg = connection.encode_labeled_array(arg)
+                # datacubes
+                elif arg["type"] == "datacube":
+                    if "data" in arg:
+                        arg["data"] = load_datacube(arg)
+                    arg = connection.encode_datacube(arg)
+            elif "process_graph" in arg:
+                arg = connection.encode_process_graph(arg, process_id, name)
 
         if connection.is_json_only():
             check_non_json_values(arg)
@@ -196,18 +188,30 @@ def check_return_value(example, result, connection):
     # handle custom types of data
     result = connection.decode_data(result)
 
-    if isinstance(example["returns"], float) and math.isnan(example["returns"]):
+    if isinstance(example["returns"], dict):
+        assert isinstance(result, dict)
+        assert {} == DeepDiff(
+            example["returns"],
+            result,
+            significant_digits=10,  # todo
+            ignore_numeric_type_changes=True,
+            exclude_paths=[
+                "root['nodata']" # todo: non-standardized
+            ],
+            exclude_regex_paths=[
+                r"root\['dimensions'\]\[\d+\]\['reference_system'\]" # todo: non-standardized
+            ]
+        )
+    elif isinstance(example["returns"], float) and math.isnan(example["returns"]):
         assert math.isnan(result)
     elif isinstance(example["returns"], float) or isinstance(example["returns"], int):
-        assert isinstance(result, float) or isinstance(
-            result, int
-        ), "Expected a numerical result but got {} of type {}".format(
+        msg = "Expected a numerical result but got {} of type {}".format(
             result, type(result)
         )
+        assert isinstance(result, float) or isinstance(result, int), msg
         # handle numerical data with a delta
         delta = example["delta"] if "delta" in example else 0.0000000001
         assert result == pytest.approx(example["returns"], delta)
     else:
-        assert result == example["returns"], "Expected {} but got {}".format(
-            example["returns"], result
-        )
+        msg = "Expected {} but got {}".format(example["returns"], result)
+        assert result == example["returns"], msg

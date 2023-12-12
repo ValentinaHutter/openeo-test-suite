@@ -15,10 +15,9 @@ class Vito(ProcessTestRunner):
     def describe_process(self, process_id):
         return process_registry_2xx.get_spec(process_id)
 
-    def execute(self, process):
-        node = process["process_graph"]["node"]
-        fn = process_registry_2xx.get_function(node["process_id"])
-        return fn(node["arguments"], env=None)
+    def execute(self, id, arguments):
+        fn = process_registry_2xx.get_function(id)
+        return fn(arguments, env=None)
 
     def encode_datacube(self, data):
         return datacube_to_xarray(data)

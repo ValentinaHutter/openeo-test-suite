@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 import numpy as np
 import xarray as xr
@@ -78,11 +78,29 @@ def xarray_to_datacube(data):
 
 
 def iso_datetime(dt):
-    from datetime import datetime, timezone
-
     # Convert numpy.datetime64 to timestamp (in seconds)
     timestamp = dt.astype("datetime64[s]").astype(int)
     # Create a datetime object from the timestamp
     dt_object = datetime.utcfromtimestamp(timestamp).replace(tzinfo=timezone.utc)
     # Convert to ISO format string
     return dt_object.isoformat().replace("+00:00", "Z")
+
+
+def find_callback_parameters(runner, parent_process_id, parent_parameter):
+    parent_process = runner.describe_process(parent_process_id)
+    parameter = next(
+        (p for p in parent_process.parameters if p["name"] == parent_parameter), None
+    )
+    if parameter is not None:
+        schemas = (
+            [parameter["schema"]]
+            if isinstance(parameter["schema"], dict)
+            else parameter["schema"]
+        )
+        schema = next(
+            (s for s in schemas if "subtype" in s and s["subtype"] == "process-graph"),
+            None,
+        )
+        if schema is not None:
+            return schema["parameters"]
+    return []

@@ -48,10 +48,15 @@ class Dask(ProcessTestRunner):
     def describe_process(self, process_id):
         return registry[process_id].spec
 
-    def execute(self, process):
+    def execute(self, id, arguments):
+        callable = registry[id].implementation
+        return callable(**arguments)
+
+    def encode_process_graph(
+        self, process, parent_process_id=None, parent_parameter=None
+    ):
         parsed = OpenEOProcessGraph(pg_data=process)
-        callable = parsed.to_callable(process_registry=registry)
-        return callable()
+        return parsed.to_callable(process_registry=registry)
 
     def encode_datacube(self, data):
         return datacube_to_xarray(data)

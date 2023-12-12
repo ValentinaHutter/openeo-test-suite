@@ -16,24 +16,35 @@ class ProcessTestRunner:
         """
         pass
 
-    def execute(self, process: Dict) -> Any:
+    def execute(self, id: str, arguments: Dict) -> Any:
         """
-        Executes a user-defined process
-        Follows definition of the same function in the openEO Python client
+        Executes a process with the given id and arguments.
+        """
+        pass
+
+    def encode_process_graph(
+        self, process: Dict, parent_process_id=None, parent_parameter=None
+    ) -> Any:
+        """
+        Converts a process graph from the JSON object representation to the internal
+        backend representation.
+        specification -> backend
         """
         pass
 
     def encode_labeled_array(self, data: Dict) -> Any:
         """
         Converts a labeled array from the JSON object representation (type: labeled-array)
-        to the internal backend representation openEO process tests specification -> backend
+        to the internal backend representation openEO process tests.
+        specification -> backend
         """
         raise Exception("labeled arrays not implemented yet")
 
     def encode_datacube(self, data: Dict) -> Any:
         """
         Converts a datacube from the JSON object representation (type: datacube) to the
-        internal backend representation openEO process tests specification -> backend
+        internal backend representation openEO process tests.
+        specification -> backend
         """
         raise Exception("datacubes not implemented yet")
 
@@ -41,7 +52,8 @@ class ProcessTestRunner:
         """
         Converts data from the internal backend representation to the process test/JSON5 representation
         For example: numpy values to JSON data types, labeled-array or datacube to
-        JSON object representation backend -> openEO process tests specification
+        JSON object representation.
+        backend -> openEO process tests specification
         """
         return data
 
