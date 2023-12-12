@@ -68,14 +68,24 @@ def connection(backend_url: str, auto_authenticate: bool, capfd) -> openeo.Conne
     con = openeo.connect(backend_url, auto_validate=False)
 
     if auto_authenticate:
-        # Temporarily disable output capturing, to make sure that OIDC device code instructions (if any) are visible to the user.
-        with capfd.disabled():
-            # Note: this generic `authenticate_oidc()` call allows both:
-            # - device code/refresh token based authentication for manual test suite runs
-            # - client credentials auth through env vars for automated/Jenkins CI runs
-            #
-            # See https://open-eo.github.io/openeo-python-client/auth.html#oidc-authentication-dynamic-method-selection
-            con.authenticate_oidc()
+        auth_method = os.environ.get("OPENEO_AUTH_METHOD")
+
+        if auth_method == "none":
+            pass
+        elif auth_method == "basic":
+            con.authenticate_basic(
+                username=os.environ.get("OPENEO_AUTH_BASIC_USERNAME"),
+                password=os.environ.get("OPENEO_AUTH_BASIC_PASSWORD"),
+            )
+        else:
+            # Temporarily disable output capturing, to make sure that OIDC device code instructions (if any) are visible to the user.
+            with capfd.disabled():
+                # Note: this generic `authenticate_oidc()` call allows both:
+                # - device code/refresh token based authentication for manual test suite runs
+                # - client credentials auth through env vars for automated/Jenkins CI runs
+                #
+                # See https://open-eo.github.io/openeo-python-client/auth.html#oidc-authentication-dynamic-method-selection
+                con.authenticate_oidc()
 
 
     return con
