@@ -195,12 +195,10 @@ def check_return_value(example, result, connection):
             result,
             significant_digits=10,  # todo
             ignore_numeric_type_changes=True,
-            exclude_paths=[
-                "root['nodata']" # todo: non-standardized
-            ],
+            exclude_paths=["root['nodata']"],  # todo: non-standardized
             exclude_regex_paths=[
-                r"root\['dimensions'\]\[\d+\]\['reference_system'\]" # todo: non-standardized
-            ]
+                r"root\['dimensions'\]\[\d+\]\['reference_system'\]"  # todo: non-standardized
+            ],
         )
     elif isinstance(example["returns"], float) and math.isnan(example["returns"]):
         assert math.isnan(result)

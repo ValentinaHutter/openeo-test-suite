@@ -47,6 +47,9 @@ def backend_url(request) -> str:
     else:
         url = None
 
+    if isinstance(url, str) and "://" not in url:
+        url = f"https://{url}"
+
     _log.info(f"Using openEO back-end URL {url!r}")
 
     return url
