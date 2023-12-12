@@ -6,6 +6,7 @@ import pytest
 
 _log = logging.getLogger(__name__)
 
+
 def pytest_addoption(parser):
     parser.addoption(
         "--openeo-backend-url",
@@ -32,6 +33,7 @@ def pytest_addoption(parser):
         help="A specific test runner to use for individual process tests. If not provided, uses a default HTTP API runner.",
     )
 
+
 @pytest.fixture(scope="session")
 def backend_url(request) -> str:
     """
@@ -48,6 +50,7 @@ def backend_url(request) -> str:
     _log.info(f"Using openEO back-end URL {url!r}")
 
     return url
+
 
 @pytest.fixture
 def auto_authenticate() -> bool:
@@ -86,6 +89,5 @@ def connection(backend_url: str, auto_authenticate: bool, capfd) -> openeo.Conne
                 #
                 # See https://open-eo.github.io/openeo-python-client/auth.html#oidc-authentication-dynamic-method-selection
                 con.authenticate_oidc()
-
 
     return con

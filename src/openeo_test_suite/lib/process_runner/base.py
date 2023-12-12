@@ -1,14 +1,14 @@
-from typing import List, Dict, Any
+from typing import Any, Dict, List
+
 
 class ProcessTestRunner:
-
     def list_processes(self) -> List[Dict]:
         """
         Returns a list of all processes supported by the backend
         Follows definition of the same function in the openEO Python client
         """
         pass
-    
+
     def describe_process(self, process_id: str) -> Dict:
         """
         Returns single process description
@@ -22,7 +22,6 @@ class ProcessTestRunner:
         Follows definition of the same function in the openEO Python client
         """
         pass
-    
 
     def encode_labeled_array(self, data: Dict) -> Any:
         """
@@ -45,7 +44,6 @@ class ProcessTestRunner:
         JSON object representation backend -> openEO process tests specification
         """
         return data
-    
 
     def is_json_only(self) -> bool:
         """

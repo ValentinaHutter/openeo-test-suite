@@ -2,11 +2,16 @@ import importlib
 import inspect
 
 from openeo_pg_parser_networkx import OpenEOProcessGraph, ProcessRegistry
-from openeo_processes_dask.process_implementations.core import process
 from openeo_pg_parser_networkx.process_registry import Process
+from openeo_processes_dask.process_implementations.core import process
 
 from openeo_test_suite.lib.process_runner.base import ProcessTestRunner
-from openeo_test_suite.lib.process_runner.util import numpy_to_native, xarray_to_datacube, datacube_to_xarray
+from openeo_test_suite.lib.process_runner.util import (
+    datacube_to_xarray,
+    numpy_to_native,
+    xarray_to_datacube,
+)
+
 
 def create_process_registry():
     process_registry = ProcessRegistry(wrap_funcs=[process])
@@ -27,24 +32,25 @@ def create_process_registry():
 
     for func in processes_from_module:
         process_registry[func.__name__] = Process(
-                spec=specs[func.__name__], implementation=func
+            spec=specs[func.__name__], implementation=func
         )
 
     return process_registry
 
+
 registry = create_process_registry()
 
-class Dask(ProcessTestRunner):
 
+class Dask(ProcessTestRunner):
     def list_processes(self):
         return map(lambda process: process.spec, registry.values())
-    
+
     def describe_process(self, process_id):
         return registry[process_id].spec
 
     def execute(self, process):
         parsed = OpenEOProcessGraph(pg_data=process)
-        callable = parsed.to_callable(process_registry = registry)
+        callable = parsed.to_callable(process_registry=registry)
         return callable()
 
     def encode_datacube(self, data):

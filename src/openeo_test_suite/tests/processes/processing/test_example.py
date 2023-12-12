@@ -1,12 +1,14 @@
-import json5
 import math
+import warnings
 from pathlib import Path, posixpath
+
+import json5
 import pytest
 import xarray as xr
-import warnings
 
 # glob path to the test files
 examples_path = "assets/processes/tests/*.json5"
+
 
 def get_examples():
     examples = []
@@ -24,19 +26,28 @@ def get_examples():
                         level = data["level"]
                     else:
                         level = "L4"
-                    
+
                     examples.append([id, test, file, level])
         except Exception as e:
             warnings.warn("Failed to load {} due to {}".format(file, e))
-    
+
     return examples
+
 
 @pytest.mark.parametrize("id,example,file,level", get_examples())
 def test_process(connection, process_levels, processes, id, example, file, level):
     if len(process_levels) > 0 and level not in process_levels:
-        pytest.skip("Skipping process {} because {} is not in the specified levels: {}".format(id, level, ", ".join(process_levels)))
+        pytest.skip(
+            "Skipping process {} because {} is not in the specified levels: {}".format(
+                id, level, ", ".join(process_levels)
+            )
+        )
     elif len(processes) > 0 and id not in processes:
-        pytest.skip("Skipping process {} because it is not in the specified processes: {}".format(id, ", ".join(processes)))
+        pytest.skip(
+            "Skipping process {} because it is not in the specified processes: {}".format(
+                id, ", ".join(processes)
+            )
+        )
 
     # check whether the process is available
     try:
@@ -50,7 +61,11 @@ def test_process(connection, process_levels, processes, id, example, file, level
             try:
                 connection.describe_process(pid)
             except:
-                pytest.skip("Test requires additional process {} which is not available".format(pid))
+                pytest.skip(
+                    "Test requires additional process {} which is not available".format(
+                        pid
+                    )
+                )
 
     # prepare the arguments from test JSON encoding to internal backend representations
     # or skip if not supported by the test runner
@@ -94,13 +109,15 @@ def test_process(connection, process_levels, processes, id, example, file, level
     else:
         pytest.skip("Test doesn't provide an expected result")
 
+
 def prepare_arguments(arguments, connection, file):
     for name in arguments:
         arg = arguments[name]
 
         # handle external references to files
         if isinstance(arg, dict) and "$ref" in arg:
-            arg = load_ref(arg["$ref"], file)
+            raise Exception("Loading external references is not implemented yet")
+            # arg = load_ref(arg["$ref"], file)
 
         # handle custom types of data
         if isinstance(arg, dict) and "type" in arg:
@@ -117,8 +134,9 @@ def prepare_arguments(arguments, connection, file):
             check_non_json_values(arg)
 
         arguments[name] = arg
-    
+
     return arguments
+
 
 def load_datacube(cube):
     if isinstance(cube["data"], str):
@@ -129,6 +147,7 @@ def load_datacube(cube):
             raise Exception("Datacubes from non-netCDF files not implemented yet")
     else:
         return cube["data"]
+
 
 def load_ref(ref, file):
     if ref.endswith(".json") or ref.endswith(".json5"):
@@ -143,6 +162,7 @@ def load_ref(ref, file):
     else:
         raise Exception("External references to non-JSON files not implemented yet")
 
+
 def check_non_json_values(value):
     if isinstance(value, float):
         if math.isnan(value):
@@ -156,13 +176,19 @@ def check_non_json_values(value):
         for item in value:
             check_non_json_values(item)
 
+
 def check_exception(example, result):
     assert isinstance(result, Exception)
     if isinstance(example["throws"], str):
         if result.__class__.__name__ != example["throws"]:
-            warnings.warn("Expected exception {} but got {}".format(example['throws'], result.__class__.__name__))
+            warnings.warn(
+                "Expected exception {} but got {}".format(
+                    example["throws"], result.__class__.__name__
+                )
+            )
         # todo: we should enable this end remove the two lines above, but right now tooling doesn't really implement this
         # assert result.__class__.__name__ == example["throws"]
+
 
 def check_return_value(example, result, connection):
     assert not isinstance(result, Exception)
@@ -173,9 +199,15 @@ def check_return_value(example, result, connection):
     if isinstance(example["returns"], float) and math.isnan(example["returns"]):
         assert math.isnan(result)
     elif isinstance(example["returns"], float) or isinstance(example["returns"], int):
-        assert isinstance(result, float) or isinstance(result, int), "Expected a numerical result but got {} of type {}".format(result, type(result))
+        assert isinstance(result, float) or isinstance(
+            result, int
+        ), "Expected a numerical result but got {} of type {}".format(
+            result, type(result)
+        )
         # handle numerical data with a delta
         delta = example["delta"] if "delta" in example else 0.0000000001
         assert result == pytest.approx(example["returns"], delta)
     else:
-        assert result == example["returns"], "Expected {} but got {}".format(example["returns"], result)
+        assert result == example["returns"], "Expected {} but got {}".format(
+            example["returns"], result
+        )

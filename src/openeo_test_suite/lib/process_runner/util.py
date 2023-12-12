@@ -1,6 +1,8 @@
 from datetime import datetime
-import xarray as xr
+
 import numpy as np
+import xarray as xr
+
 
 def numpy_to_native(data):
     # Converting numpy dtypes to native python types
@@ -12,28 +14,32 @@ def numpy_to_native(data):
 
     return data
 
+
 def datacube_to_xarray(cube):
     coords = []
     crs = None
     for dim in cube["dimensions"]:
-            if dim["type"] == "temporal":
-                    # date replace for older Python versions that don't support ISO parsing (only available since 3.11)
-                    values = [datetime.fromisoformat(date.replace("Z", "")) for date in dim["values"]]
-            elif dim["type"] == "spatial":
-                values = dim["values"]
-                if "reference_system" in dim:
-                    crs = dim["reference_system"]
-            else:
-                values = dim["values"]
-            
-            coords.append((dim["name"], values))
-            
+        if dim["type"] == "temporal":
+            # date replace for older Python versions that don't support ISO parsing (only available since 3.11)
+            values = [
+                datetime.fromisoformat(date.replace("Z", "")) for date in dim["values"]
+            ]
+        elif dim["type"] == "spatial":
+            values = dim["values"]
+            if "reference_system" in dim:
+                crs = dim["reference_system"]
+        else:
+            values = dim["values"]
+
+        coords.append((dim["name"], values))
+
     da = xr.DataArray(cube["data"], coords=coords)
     if crs is not None:
-        da.attrs["crs"] = crs # todo: non-standardized
+        da.attrs["crs"] = crs  # todo: non-standardized
     if "nodata" in cube:
-        da.attrs["nodata"] = cube["nodata"] # todo: non-standardized
+        da.attrs["nodata"] = cube["nodata"]  # todo: non-standardized
     return da
+
 
 def xarray_to_datacube(data):
     if not isinstance(data, xr.DataArray):
@@ -49,39 +55,33 @@ def xarray_to_datacube(data):
             values = [iso_datetime(date) for date in data.coords[c].values]
         else:
             values = data.coords[c].values.tolist()
-            if c == "x": # todo: non-standardized
+            if c == "x":  # todo: non-standardized
                 type = "spatial"
                 axis = "x"
-            elif c == "y": # todo: non-standardized
+            elif c == "y":  # todo: non-standardized
                 type = "spatial"
                 axis = "y"
-        
-        dim = {
-            "name": c,
-            "type": type,
-            "values": values
-        }
+
+        dim = {"name": c, "type": type, "values": values}
         if axis is not None:
             dim["axis"] = axis
         if "crs" in data.attrs:
-            dim["reference_system"] = data.attrs["crs"] # todo: non-standardized
+            dim["reference_system"] = data.attrs["crs"]  # todo: non-standardized
         dims.append(dim)
 
-    cube = {
-        "type": "datacube",
-        "dimensions": dims,
-        "data": data.values.tolist()
-    }
+    cube = {"type": "datacube", "dimensions": dims, "data": data.values.tolist()}
 
     if "nodata" in data.attrs:
-        cube["nodata"] = data.attrs["nodata"] # todo: non-standardized
-    
+        cube["nodata"] = data.attrs["nodata"]  # todo: non-standardized
+
     return cube
-        
+
+
 def iso_datetime(dt):
     from datetime import datetime, timezone
+
     # Convert numpy.datetime64 to timestamp (in seconds)
-    timestamp = dt.astype('datetime64[s]').astype(int)
+    timestamp = dt.astype("datetime64[s]").astype(int)
     # Create a datetime object from the timestamp
     dt_object = datetime.utcfromtimestamp(timestamp).replace(tzinfo=timezone.utc)
     # Convert to ISO format string
