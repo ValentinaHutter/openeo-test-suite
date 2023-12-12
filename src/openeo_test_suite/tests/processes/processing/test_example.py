@@ -115,6 +115,8 @@ def prepare_arguments(arguments, connection, file):
 
         if connection.is_json_only():
             check_non_json_values(arg)
+
+        arguments[name] = arg
     
     return arguments
 
@@ -163,6 +165,8 @@ def check_exception(example, result):
         # assert result.__class__.__name__ == example["throws"]
 
 def check_return_value(example, result, connection):
+    assert not isinstance(result, Exception)
+
     # handle custom types of data
     result = connection.decode_data(result)
 
