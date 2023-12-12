@@ -14,10 +14,22 @@ def pytest_addoption(parser):
         help="The openEO backend URL to connect to.",
     )
     parser.addoption(
+        "--process-levels",
+        action="store",
+        default="",
+        help="The openEO process profiles you want to test against, e.g. 'L1,L2,L2A'. Mutually exclusive with --processes.",
+    )
+    parser.addoption(
+        "--processes",
+        action="store",
+        default="",
+        help="The openEO processes you want to test against, e.g. 'apply,reduce_dimension'. Mutually exclusive with --process-levels.",
+    )
+    parser.addoption(
         "--runner",
         action="store",
         default=None,
-        help="A specific test runner to use. If not provided, uses a default HTTP API runner.",
+        help="A specific test runner to use for individual process tests. If not provided, uses a default HTTP API runner.",
     )
 
 @pytest.fixture(scope="session")
@@ -37,23 +49,6 @@ def backend_url(request) -> str:
 
     return url
 
-@pytest.fixture(scope="session")
-def runner(request) -> str:
-    """
-    Fixture to get the desired runner to test with.
-    """
-    # TODO: also support getting it from a config file?
-    if request.config.getoption("--runner"):
-        runner = request.config.getoption("--runner")
-    elif "OPENEO_RUNNER" in os.environ:
-        runner = os.environ["OPENEO_RUNNER"]
-    else:
-        runner = "http"
-
-    _log.info(f"Using runner {runner!r}")
-
-    return runner
-
 @pytest.fixture
 def auto_authenticate() -> bool:
     """
@@ -64,7 +59,7 @@ def auto_authenticate() -> bool:
 
 
 @pytest.fixture
-def connection(backend_url: str, runner: str, auto_authenticate: bool, capfd) -> openeo.Connection:
+def connection(backend_url: str, auto_authenticate: bool, capfd) -> openeo.Connection:
     if not backend_url:
         raise RuntimeError(
             "No openEO backend URL found. Specify it using the `--openeo-backend-url` command line option or through the 'OPENEO_BACKEND_URL' environment variable"

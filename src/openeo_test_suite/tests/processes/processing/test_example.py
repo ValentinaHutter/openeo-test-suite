@@ -7,8 +7,6 @@ import warnings
 
 # glob path to the test files
 examples_path = "assets/processes/tests/*.json5"
-# for debugging purposes, you can limit the tests to specific processes
-processes = []
 
 def get_examples():
     examples = []
@@ -16,20 +14,30 @@ def get_examples():
     files = package_root_folder.glob(examples_path)
     for file in files:
         id = file.stem
-        # if specific processes are specified above, skip all others
-        if len(processes) > 0 and id not in processes:
-            continue
         try:
             with file.open() as f:
                 data = json5.load(f)
-                examples += map(lambda test: [id, test, file], data["tests"])
+                for test in data["tests"]:
+                    if "level" in test:
+                        level = test["level"]
+                    elif "level" in data:
+                        level = data["level"]
+                    else:
+                        level = "L4"
+                    
+                    examples.append([id, test, file, level])
         except Exception as e:
             warnings.warn("Failed to load {} due to {}".format(file, e))
     
     return examples
 
-@pytest.mark.parametrize("id,example,file", get_examples())
-def test_process(connection, id, example, file):
+@pytest.mark.parametrize("id,example,file,level", get_examples())
+def test_process(connection, process_levels, processes, id, example, file, level):
+    if len(process_levels) > 0 and level not in process_levels:
+        pytest.skip("Skipping process {} because {} is not in the specified levels: {}".format(id, level, ", ".join(process_levels)))
+    elif len(processes) > 0 and id not in processes:
+        pytest.skip("Skipping process {} because it is not in the specified processes: {}".format(id, ", ".join(processes)))
+
     # check whether the process is available
     try:
         connection.describe_process(id)
