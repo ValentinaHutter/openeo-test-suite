@@ -11,6 +11,16 @@ from deepdiff import DeepDiff
 examples_path = "assets/processes/tests/*.json5"
 
 
+def get_level(data, test):
+    if "level" in test:
+        level = test["level"]
+    elif "level" in data:
+        level = data["level"]
+    else:
+        level = "L4"
+    return level
+
+
 def get_examples():
     examples = []
     package_root_folder = Path(__file__).parents[5]
@@ -21,13 +31,7 @@ def get_examples():
             with file.open() as f:
                 data = json5.load(f)
                 for test in data["tests"]:
-                    if "level" in test:
-                        level = test["level"]
-                    elif "level" in data:
-                        level = data["level"]
-                    else:
-                        level = "L4"
-
+                    level = get_level(data, test)
                     examples.append([id, test, file, level])
         except Exception as e:
             warnings.warn("Failed to load {} due to {}".format(file, e))
@@ -62,11 +66,7 @@ def test_process(connection, process_levels, processes, id, example, file, level
             try:
                 connection.describe_process(pid)
             except:
-                pytest.skip(
-                    "Test requires additional process {} which is not available".format(
-                        pid
-                    )
-                )
+                pytest.skip("Test requires missing process {}".format(pid))
 
     # prepare the arguments from test JSON encoding to internal backend representations
     # or skip if not supported by the test runner
@@ -190,15 +190,29 @@ def check_return_value(example, result, connection):
 
     if isinstance(example["returns"], dict):
         assert isinstance(result, dict)
+        exclude_regex_paths = []
+        exclude_paths = []
+        ignore_order_func = None
+        if "type" in example["returns"] and example["returns"]["type"] == "datacube":
+            # todo: non-standardized
+            exclude_regex_paths.append(
+                r"root\['dimensions'\]\[\d+\]\['reference_system'\]"
+            )
+            # todo: non-standardized
+            exclude_paths.append("root['nodata']")
+            # ignore data if operation is not changing data
+            if example["returns"]["data"] is None:
+                exclude_paths.append("root['data']")
+                ignore_order_func = lambda level: "dimensions" in level.path()
+
         assert {} == DeepDiff(
             example["returns"],
             result,
             significant_digits=10,  # todo
             ignore_numeric_type_changes=True,
-            exclude_paths=["root['nodata']"],  # todo: non-standardized
-            exclude_regex_paths=[
-                r"root\['dimensions'\]\[\d+\]\['reference_system'\]"  # todo: non-standardized
-            ],
+            exclude_paths=exclude_paths,
+            exclude_regex_paths=exclude_regex_paths,
+            ignore_order_func=ignore_order_func,
         )
     elif isinstance(example["returns"], float) and math.isnan(example["returns"]):
         assert math.isnan(result)
