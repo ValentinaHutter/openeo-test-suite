@@ -32,3 +32,6 @@ Dask = [
 testpaths = [
     "src/openeo_test_suite/tests",
 ]
+filterwarnings = [
+    "ignore:(pkg_resources|jsonschema.RefResolver):DeprecationWarning",
+]
