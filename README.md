@@ -65,7 +65,6 @@ or through an environment variable `OPENEO_BACKEND_URL`
 
 If no explicit protocol is specified, `https://` will be assumed automatically.
 
-
 ## Authentication of the basic `connection` fixture
 
 The test suite provides a basic `connection` fixture
@@ -90,7 +89,6 @@ which is driven by the `OPENEO_AUTH_METHOD` environment variable:
   - Otherwise, the OIDC device code flow is initiated.
     Make sure to check the logging/output of the test suite run
     for instructions on how to complete the authentication flow.
-
 
 ## Development and contributions
 
