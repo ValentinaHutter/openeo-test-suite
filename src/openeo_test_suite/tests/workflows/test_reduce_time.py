@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import xarray as xr
 
 
@@ -14,7 +12,7 @@ def test_reduce_time(
     cube = cube_red_nir.reduce_dimension(dimension=t_dim, reducer="mean")
     cube.download(filename)
 
-    assert Path(filename).exists()
+    assert filename.exists()
     try:
         data = xr.open_dataarray(filename)
     except ValueError:
@@ -36,7 +34,7 @@ def test_reduce_time_merge(
     cube_merged = cube_0.merge_cubes(cube_1, overlap_resolver="subtract")
     cube_merged.download(filename)
 
-    assert Path(filename).exists()
+    assert filename.exists()
     try:
         data = xr.open_dataarray(filename)
     except ValueError:

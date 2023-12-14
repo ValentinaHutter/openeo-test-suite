@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import xarray as xr
 
 # Currently, dev.openeo.eurac.edu stores the results in xarray.DataArray in the netCDFs
@@ -11,13 +9,11 @@ def test_apply(
     b_dim,
     tmp_path,
 ):
-    from openeo.processes import clip
-
     filename = tmp_path / "test_apply.nc"
     cube = cube_one_day_red.apply(lambda x: x.clip(0, 1))
     cube.download(filename)
 
-    assert Path(filename).exists()
+    assert filename.exists()
     try:
         data = xr.open_dataarray(filename)
     except ValueError:
@@ -34,7 +30,7 @@ def test_apply_dimension(
     cube = cube_one_day_red_nir.apply_dimension(dimension=b_dim, process="max")
     cube.download(filename)
 
-    assert Path(filename).exists()
+    assert filename.exists()
     try:
         data = xr.open_dataarray(filename)
     except ValueError:

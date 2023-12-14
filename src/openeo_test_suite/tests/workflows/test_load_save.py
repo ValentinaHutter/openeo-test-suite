@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import numpy as np
 import rioxarray
 import xarray as xr
@@ -15,7 +13,7 @@ def test_load_save_netcdf(
     filename = tmp_path / "test_load_save_netcdf.nc"
     cube_full_extent.download(filename)
 
-    assert Path(filename).exists()
+    assert filename.exists()
     try:
         data = xr.open_dataarray(filename)
     except ValueError:
@@ -31,7 +29,7 @@ def test_load_save_10x10_netcdf(
     filename = tmp_path / "test_load_save_10x10_netcdf.nc"
     cube_red_10x10.download(filename)
 
-    assert Path(filename).exists()
+    assert filename.exists()
     try:
         data = xr.open_dataarray(filename)
     except ValueError:
@@ -49,7 +47,7 @@ def test_load_save_geotiff(cube_one_day_red, tmp_path):
     filename = tmp_path / "test_load_save_geotiff.tiff"
     cube_one_day_red.download(filename)
 
-    assert Path(filename).exists()
+    assert filename.exists()
     assert (
         len(rioxarray.open_rasterio(filename).dims) >= 3
     )  # 2 spatial + 1 band + (maybe) 1 time
