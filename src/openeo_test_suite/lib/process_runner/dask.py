@@ -61,7 +61,7 @@ class Dask(ProcessTestRunner):
     def encode_datacube(self, data):
         return datacube_to_xarray(data)
 
-    def decode_data(self, data):
-        data = numpy_to_native(data)
+    def decode_data(self, data, expected):
+        data = numpy_to_native(data, expected)
         data = xarray_to_datacube(data)
         return data

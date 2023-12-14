@@ -1,16 +1,22 @@
+from dateutil.parser import parse
 from datetime import datetime, timezone
 
 import numpy as np
 import xarray as xr
 
 
-def numpy_to_native(data):
+def numpy_to_native(data, expected):
     # Converting numpy dtypes to native python types
     if isinstance(data, np.ndarray) or isinstance(data, np.generic):
-        if data.size == 1:
-            return data.item()
-        elif data.size > 1:
+        if isinstance(expected, list):
             return data.tolist()
+        else:
+            if data.size == 0:
+                return None
+            if data.size == 1:
+                return data.item()
+            elif data.size > 1:
+                return data.tolist()
 
     return data
 
@@ -52,7 +58,7 @@ def xarray_to_datacube(data):
         axis = None
         if isinstance(data.coords[c].values[0], np.datetime64):
             type = "temporal"
-            values = [iso_datetime(date) for date in data.coords[c].values]
+            values = [datetime_to_isostr(date) for date in data.coords[c].values]
         else:
             values = data.coords[c].values.tolist()
             if c == "x":  # todo: non-standardized
@@ -77,7 +83,11 @@ def xarray_to_datacube(data):
     return cube
 
 
-def iso_datetime(dt):
+def isostr_to_datetime(dt):
+    return parse(dt)
+
+
+def datetime_to_isostr(dt):
     # Convert numpy.datetime64 to timestamp (in seconds)
     timestamp = dt.astype("datetime64[s]").astype(int)
     # Create a datetime object from the timestamp

@@ -1,6 +1,7 @@
 import math
 import warnings
 from pathlib import Path, posixpath
+from openeo_test_suite.lib.process_runner.util import isostr_to_datetime
 
 import json5
 import pytest
@@ -116,11 +117,11 @@ def prepare_arguments(arguments, process_id, connection, file):
                     arg = connection.encode_labeled_array(arg)
                 # datacubes
                 elif arg["type"] == "datacube":
-                    if "data" in arg:
-                        arg["data"] = load_datacube(arg)
                     arg = connection.encode_datacube(arg)
             elif "process_graph" in arg:
                 arg = connection.encode_process_graph(arg, process_id, name)
+
+        arg = connection.encode_data(arg)
 
         if connection.is_json_only():
             check_non_json_values(arg)
@@ -130,15 +131,32 @@ def prepare_arguments(arguments, process_id, connection, file):
     return arguments
 
 
-def load_datacube(cube):
-    if isinstance(cube["data"], str):
-        path = posixpath.join(cube["path"], cube["data"])
-        if path.endswith(".nc"):
-            return xr.open_dataarray(path)
+def prepare_results(example, result = None):
+    # go through the example and result recursively and convert datetimes to iso strings
+    # could be used for more conversions in the future...
+
+    if isinstance(example, dict):
+        if "type" in example and example["type"] == "datetime":
+            example = isostr_to_datetime(example["value"])
+            try:
+                result = isostr_to_datetime(result)
+            except:
+                pass
         else:
-            raise Exception("Datacubes from non-netCDF files not implemented yet")
-    else:
-        return cube["data"]
+            for key in example:
+                if key not in result:
+                    (example[key],) = prepare_results(example[key])
+                else:
+                    (example[key], result[key]) = prepare_results(example[key], result[key])
+    
+    elif isinstance(example, list):
+        for i in range(len(example)):
+            if i >= len(result):
+                (example[i],) = prepare_results(example[i])
+            else:
+                (example[i], result[i]) = prepare_results(example[i], result[i])
+
+    return (example, result)
 
 
 def load_ref(ref, file):
@@ -170,7 +188,7 @@ def check_non_json_values(value):
 
 
 def check_exception(example, result):
-    assert isinstance(result, Exception)
+    assert isinstance(result, Exception), "Excpected an exception, but got {}".format(result)
     if isinstance(example["throws"], str):
         if result.__class__.__name__ != example["throws"]:
             warnings.warn(
@@ -183,13 +201,18 @@ def check_exception(example, result):
 
 
 def check_return_value(example, result, connection):
-    assert not isinstance(result, Exception)
+    assert not isinstance(result, Exception), "Unexpected exception: {} ".format(str(result))
 
     # handle custom types of data
-    result = connection.decode_data(result)
+    result = connection.decode_data(result, example["returns"])
+
+    # decode special types (currently mostly datetimes)
+    (example["returns"], result) = prepare_results(example["returns"], result)
+
+    delta = example["delta"] if "delta" in example else 0.0000000001
 
     if isinstance(example["returns"], dict):
-        assert isinstance(result, dict)
+        assert isinstance(result, dict), "Expected a dict but got {}".format(type(result))
         exclude_regex_paths = []
         exclude_paths = []
         ignore_order_func = None
@@ -205,24 +228,34 @@ def check_return_value(example, result, connection):
                 exclude_paths.append("root['data']")
                 ignore_order_func = lambda level: "dimensions" in level.path()
 
-        assert {} == DeepDiff(
+        diff = DeepDiff(
             example["returns"],
             result,
-            significant_digits=10,  # todo
+            math_epsilon=delta,
             ignore_numeric_type_changes=True,
             exclude_paths=exclude_paths,
             exclude_regex_paths=exclude_regex_paths,
             ignore_order_func=ignore_order_func,
         )
+        assert {} == diff, "Differences: {}".format(str(diff))
+    elif isinstance(example["returns"], list):
+        assert isinstance(result, list), "Expected a list but got {}".format(type(result))
+        diff = DeepDiff(
+            example["returns"],
+            result,
+            math_epsilon=delta,
+            ignore_numeric_type_changes=True,
+        )
+        assert {} == diff, "Differences: {}".format(str(diff))
     elif isinstance(example["returns"], float) and math.isnan(example["returns"]):
-        assert math.isnan(result)
+        assert math.isnan(result), "Got {} instead of NaN".format(result)
     elif isinstance(example["returns"], float) or isinstance(example["returns"], int):
         msg = "Expected a numerical result but got {} of type {}".format(
             result, type(result)
         )
         assert isinstance(result, float) or isinstance(result, int), msg
+        assert not math.isnan(result), "Got unexpected NaN as result"
         # handle numerical data with a delta
-        delta = example["delta"] if "delta" in example else 0.0000000001
         assert result == pytest.approx(example["returns"], delta)
     else:
         msg = "Expected {} but got {}".format(example["returns"], result)
