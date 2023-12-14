@@ -72,3 +72,9 @@ class ProcessTestRunner:
         If True, the runner will skip all tests that contain non JSON values such as infinity and NaN.
         """
         return False
+
+    def get_nodata_value(self) -> Any:
+        """
+        Returns the nodata value of the backend.
+        """
+        return None

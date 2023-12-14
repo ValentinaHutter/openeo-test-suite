@@ -98,63 +98,77 @@ def test_process(connection, process_levels, processes, id, example, file, level
     elif returns:
         check_return_value(example, result, connection)
     else:
-        pytest.skip("Test doesn't provide an expected result")
+        pytest.skip("Test for process {} doesn't provide an expected result for arguments: {}".format(id, example["arguments"]))
 
 
 def prepare_arguments(arguments, process_id, connection, file):
     for name in arguments:
-        arg = arguments[name]
-
-        # handle external references to files
-        if isinstance(arg, dict) and "$ref" in arg:
-            arg = load_ref(arg["$ref"], file)
-
-        # handle custom types of data
-        if isinstance(arg, dict):
-            if "type" in arg:
-                # labeled arrays
-                if arg["type"] == "labeled-array":
-                    arg = connection.encode_labeled_array(arg)
-                # datacubes
-                elif arg["type"] == "datacube":
-                    arg = connection.encode_datacube(arg)
-            elif "process_graph" in arg:
-                arg = connection.encode_process_graph(arg, process_id, name)
-
-        arg = connection.encode_data(arg)
-
-        if connection.is_json_only():
-            check_non_json_values(arg)
-
-        arguments[name] = arg
-
+        arguments[name] = prepare_argument(arguments[name], process_id, name, connection, file)
+    
     return arguments
 
+def prepare_argument(arg, process_id, name, connection, file):
+    # handle external references to files
+    if isinstance(arg, dict) and "$ref" in arg:
+        arg = load_ref(arg["$ref"], file)
 
-def prepare_results(example, result = None):
+    # handle custom types of data
+    if isinstance(arg, dict):
+        if "type" in arg:
+            # labeled arrays
+            if arg["type"] == "labeled-array":
+                arg = connection.encode_labeled_array(arg)
+            # datacubes
+            elif arg["type"] == "datacube":
+                arg = connection.encode_datacube(arg)
+            # nodata-values
+            elif arg["type"] == "nodata":
+                arg = connection.get_nodata_value()
+        elif "process_graph" in arg:
+            arg = connection.encode_process_graph(arg, process_id, name)
+        else:
+            for key in arg:
+                arg[key] = prepare_argument(arg[key], process_id, name, connection, file)
+    
+    elif isinstance(arg, list):
+        for i in range(len(arg)):
+            arg[i] = prepare_argument(arg[i], process_id, name, connection, file)
+
+    arg = connection.encode_data(arg)
+
+    if connection.is_json_only():
+        check_non_json_values(arg)
+
+    return arg
+
+
+def prepare_results(connection, example, result = None):
     # go through the example and result recursively and convert datetimes to iso strings
     # could be used for more conversions in the future...
 
     if isinstance(example, dict):
-        if "type" in example and example["type"] == "datetime":
-            example = isostr_to_datetime(example["value"])
-            try:
-                result = isostr_to_datetime(result)
-            except:
-                pass
+        if "type" in example:
+            if example["type"] == "datetime":
+                example = isostr_to_datetime(example["value"])
+                try:
+                    result = isostr_to_datetime(result)
+                except:
+                    pass
+            elif example["type"] == "nodata":
+                example = connection.get_nodata_value()
         else:
             for key in example:
                 if key not in result:
-                    (example[key],) = prepare_results(example[key])
+                    (example[key],) = prepare_results(connection, example[key])
                 else:
-                    (example[key], result[key]) = prepare_results(example[key], result[key])
+                    (example[key], result[key]) = prepare_results(connection, example[key], result[key])
     
     elif isinstance(example, list):
         for i in range(len(example)):
             if i >= len(result):
-                (example[i],) = prepare_results(example[i])
+                (example[i],) = prepare_results(connection, example[i])
             else:
-                (example[i], result[i]) = prepare_results(example[i], result[i])
+                (example[i], result[i]) = prepare_results(connection, example[i], result[i])
 
     return (example, result)
 
@@ -206,8 +220,8 @@ def check_return_value(example, result, connection):
     # handle custom types of data
     result = connection.decode_data(result, example["returns"])
 
-    # decode special types (currently mostly datetimes)
-    (example["returns"], result) = prepare_results(example["returns"], result)
+    # decode special types (currently mostly datetimes and nodata)
+    (example["returns"], result) = prepare_results(connection, example["returns"], result)
 
     delta = example["delta"] if "delta" in example else 0.0000000001
 

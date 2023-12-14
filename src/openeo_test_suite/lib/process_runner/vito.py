@@ -26,3 +26,6 @@ class Vito(ProcessTestRunner):
         data = numpy_to_native(data, expected)
         data = xarray_to_datacube(data)
         return data
+
+    def get_nodata_value(self):
+        return float('nan')

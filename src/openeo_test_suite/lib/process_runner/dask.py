@@ -24,6 +24,10 @@ def create_process_registry():
         )
     ]
 
+    # not sure why this is needed
+    from openeo_processes_dask.process_implementations.math import e
+    processes_from_module.append(e)
+
     specs_module = importlib.import_module("openeo_processes_dask.specs")
     specs = {
         func.__name__: getattr(specs_module, func.__name__)
@@ -65,3 +69,6 @@ class Dask(ProcessTestRunner):
         data = numpy_to_native(data, expected)
         data = xarray_to_datacube(data)
         return data
+
+    def get_nodata_value(self):
+        return float('nan')
