@@ -92,11 +92,11 @@ def test_process(connection, process_levels, processes, id, example, file, level
         if isinstance(result, Exception):
             check_exception(example, result)
         else:
-            check_return_value(example, result, connection)
+            check_return_value(example, result, connection, file)
     elif throws:
         check_exception(example, result)
     elif returns:
-        check_return_value(example, result, connection)
+        check_return_value(example, result, connection, file)
     else:
         pytest.skip("Test for process {} doesn't provide an expected result for arguments: {}".format(id, example["arguments"]))
 
@@ -142,11 +142,15 @@ def prepare_argument(arg, process_id, name, connection, file):
     return arg
 
 
-def prepare_results(connection, example, result = None):
+def prepare_results(connection, file, example, result = None):
     # go through the example and result recursively and convert datetimes to iso strings
     # could be used for more conversions in the future...
 
     if isinstance(example, dict):
+        # handle external references to files
+        if isinstance(example, dict) and "$ref" in example:
+            example = load_ref(example["$ref"], file)
+        
         if "type" in example:
             if example["type"] == "datetime":
                 example = isostr_to_datetime(example["value"])
@@ -159,16 +163,16 @@ def prepare_results(connection, example, result = None):
         else:
             for key in example:
                 if key not in result:
-                    (example[key],) = prepare_results(connection, example[key])
+                    (example[key], _) = prepare_results(connection, file, example[key])
                 else:
-                    (example[key], result[key]) = prepare_results(connection, example[key], result[key])
+                    (example[key], result[key]) = prepare_results(connection, file, example[key], result[key])
     
     elif isinstance(example, list):
         for i in range(len(example)):
             if i >= len(result):
-                (example[i],) = prepare_results(connection, example[i])
+                (example[i], _) = prepare_results(connection, file, example[i])
             else:
-                (example[i], result[i]) = prepare_results(connection, example[i], result[i])
+                (example[i], result[i]) = prepare_results(connection, file, example[i], result[i])
 
     return (example, result)
 
@@ -179,7 +183,6 @@ def load_ref(ref, file):
             path = posixpath.join(file.parent, ref)
             with open(path) as f:
                 data = json5.load(f)
-                data["path"] = path
                 return data
         except Exception as e:
             raise Exception("Failed to load external reference {}: {}".format(ref, e))
@@ -214,14 +217,14 @@ def check_exception(example, result):
         # assert result.__class__.__name__ == example["throws"]
 
 
-def check_return_value(example, result, connection):
+def check_return_value(example, result, connection, file):
     assert not isinstance(result, Exception), "Unexpected exception: {} ".format(str(result))
 
     # handle custom types of data
     result = connection.decode_data(result, example["returns"])
 
     # decode special types (currently mostly datetimes and nodata)
-    (example["returns"], result) = prepare_results(connection, example["returns"], result)
+    (example["returns"], result) = prepare_results(connection, file, example["returns"], result)
 
     delta = example["delta"] if "delta" in example else 0.0000000001
 
@@ -247,6 +250,7 @@ def check_return_value(example, result, connection):
             result,
             math_epsilon=delta,
             ignore_numeric_type_changes=True,
+            ignore_nan_inequality=True,
             exclude_paths=exclude_paths,
             exclude_regex_paths=exclude_regex_paths,
             ignore_order_func=ignore_order_func,
@@ -259,6 +263,7 @@ def check_return_value(example, result, connection):
             result,
             math_epsilon=delta,
             ignore_numeric_type_changes=True,
+            ignore_nan_inequality=True,
         )
         assert {} == diff, "Differences: {}".format(str(diff))
     elif isinstance(example["returns"], float) and math.isnan(example["returns"]):

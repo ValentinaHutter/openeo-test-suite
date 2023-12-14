@@ -1,11 +1,15 @@
 from dateutil.parser import parse
 from datetime import datetime, timezone
 
+import dask
 import numpy as np
 import xarray as xr
 
 
 def numpy_to_native(data, expected):
+    if isinstance(data, dask.array.core.Array):
+        data = data.compute()
+    
     # Converting numpy dtypes to native python types
     if isinstance(data, np.ndarray) or isinstance(data, np.generic):
         if isinstance(expected, list):
@@ -48,6 +52,9 @@ def datacube_to_xarray(cube):
 
 
 def xarray_to_datacube(data):
+    if isinstance(data, dask.array.core.Array):
+        data = xr.DataArray(data.compute())
+
     if not isinstance(data, xr.DataArray):
         return data
 
@@ -56,7 +63,7 @@ def xarray_to_datacube(data):
         type = "bands"
         values = []
         axis = None
-        if isinstance(data.coords[c].values[0], np.datetime64):
+        if np.issubdtype(data.coords[c].dtype, np.datetime64):
             type = "temporal"
             values = [datetime_to_isostr(date) for date in data.coords[c].values]
         else:
