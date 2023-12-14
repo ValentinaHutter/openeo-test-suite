@@ -15,8 +15,8 @@ def auto_authenticate() -> bool:
 @pytest.fixture
 def use_stac() -> bool:
     """
-    Fixture to act as parameterizable toggle for authenticating the connection fixture.
-    Allows per-test/folder configuration of auto-authentication.
+    Fixture to act as parameterizable toggle for using data from a STAC Collection
+    or from a classic openEO Collection.
     """
     return True
 
@@ -139,10 +139,13 @@ def cube_full_extent(
             temporal_extent=temporal_interval,
         )
     else:
-        cube = connection.load_collection(
-            s2_collection,
-            temporal_extent=temporal_interval,
-        )
+        # Maybe not the best idea to load a full openEO collection?
+        # It would work fine if the STAC sample collection is replicated
+        # cube = connection.load_collection(
+        #     s2_collection,
+        #     temporal_extent=temporal_interval,
+        # )
+        return None
     return cube
 
 
