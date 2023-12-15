@@ -28,4 +28,4 @@ class Vito(ProcessTestRunner):
         return data
 
     def get_nodata_value(self):
-        return float('nan')
+        return float("nan")

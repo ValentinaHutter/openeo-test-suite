@@ -1,15 +1,11 @@
-from dateutil.parser import parse
 from datetime import datetime, timezone
 
-import dask
 import numpy as np
 import xarray as xr
+from dateutil.parser import parse
 
 
 def numpy_to_native(data, expected):
-    if isinstance(data, dask.array.core.Array):
-        data = data.compute()
-    
     # Converting numpy dtypes to native python types
     if isinstance(data, np.ndarray) or isinstance(data, np.generic):
         if isinstance(expected, list):
@@ -28,7 +24,8 @@ def numpy_to_native(data, expected):
 def datacube_to_xarray(cube):
     coords = []
     crs = None
-    for dim in cube["dimensions"]:
+    for name in cube["order"]:
+        dim = cube["dimensions"][name]
         if dim["type"] == "temporal":
             # date replace for older Python versions that don't support ISO parsing (only available since 3.11)
             values = [
@@ -41,7 +38,7 @@ def datacube_to_xarray(cube):
         else:
             values = dim["values"]
 
-        coords.append((dim["name"], values))
+        coords.append((name, values))
 
     da = xr.DataArray(cube["data"], coords=coords)
     if crs is not None:
@@ -52,13 +49,12 @@ def datacube_to_xarray(cube):
 
 
 def xarray_to_datacube(data):
-    if isinstance(data, dask.array.core.Array):
-        data = xr.DataArray(data.compute())
-
     if not isinstance(data, xr.DataArray):
         return data
 
-    dims = []
+    order = list(data.dims)
+
+    dims = {}
     for c in data.coords:
         type = "bands"
         values = []
@@ -75,14 +71,20 @@ def xarray_to_datacube(data):
                 type = "spatial"
                 axis = "y"
 
-        dim = {"name": c, "type": type, "values": values}
+        dim = {"type": type, "values": values}
         if axis is not None:
             dim["axis"] = axis
         if "crs" in data.attrs:
             dim["reference_system"] = data.attrs["crs"]  # todo: non-standardized
-        dims.append(dim)
 
-    cube = {"type": "datacube", "dimensions": dims, "data": data.values.tolist()}
+        dims[c] = dim
+
+    cube = {
+        "type": "datacube",
+        "order": order,
+        "dimensions": dims,
+        "data": data.values.tolist(),
+    }
 
     if "nodata" in data.attrs:
         cube["nodata"] = data.attrs["nodata"]  # todo: non-standardized

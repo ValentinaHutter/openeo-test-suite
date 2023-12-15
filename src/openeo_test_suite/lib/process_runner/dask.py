@@ -1,6 +1,7 @@
 import importlib
 import inspect
 
+import dask
 from openeo_pg_parser_networkx import OpenEOProcessGraph, ProcessRegistry
 from openeo_pg_parser_networkx.process_registry import Process
 from openeo_processes_dask.process_implementations.core import process
@@ -26,6 +27,7 @@ def create_process_registry():
 
     # not sure why this is needed
     from openeo_processes_dask.process_implementations.math import e
+
     processes_from_module.append(e)
 
     specs_module = importlib.import_module("openeo_processes_dask.specs")
@@ -66,9 +68,13 @@ class Dask(ProcessTestRunner):
         return datacube_to_xarray(data)
 
     def decode_data(self, data, expected):
+        if isinstance(data, dask.array.core.Array):
+            data = data.compute()
+
         data = numpy_to_native(data, expected)
         data = xarray_to_datacube(data)
+
         return data
 
     def get_nodata_value(self):
-        return float('nan')
+        return float("nan")

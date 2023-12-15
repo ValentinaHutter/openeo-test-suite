@@ -1,12 +1,13 @@
 import math
 import warnings
 from pathlib import Path, posixpath
-from openeo_test_suite.lib.process_runner.util import isostr_to_datetime
 
 import json5
 import pytest
 import xarray as xr
 from deepdiff import DeepDiff
+
+from openeo_test_suite.lib.process_runner.util import isostr_to_datetime
 
 # glob path to the test files
 examples_path = "assets/processes/tests/*.json5"
@@ -49,11 +50,7 @@ def test_process(connection, process_levels, processes, id, example, file, level
             )
         )
     elif len(processes) > 0 and id not in processes:
-        pytest.skip(
-            "Skipping process {} because it is not in the specified processes: {}".format(
-                id, ", ".join(processes)
-            )
-        )
+        pytest.skip("Skipping process {} because it is not in the specified processes".format(id))
 
     # check whether the process is available
     try:
@@ -98,14 +95,21 @@ def test_process(connection, process_levels, processes, id, example, file, level
     elif returns:
         check_return_value(example, result, connection, file)
     else:
-        pytest.skip("Test for process {} doesn't provide an expected result for arguments: {}".format(id, example["arguments"]))
+        pytest.skip(
+            "Test for process {} doesn't provide an expected result for arguments: {}".format(
+                id, example["arguments"]
+            )
+        )
 
 
 def prepare_arguments(arguments, process_id, connection, file):
     for name in arguments:
-        arguments[name] = prepare_argument(arguments[name], process_id, name, connection, file)
-    
+        arguments[name] = prepare_argument(
+            arguments[name], process_id, name, connection, file
+        )
+
     return arguments
+
 
 def prepare_argument(arg, process_id, name, connection, file):
     # handle external references to files
@@ -128,8 +132,10 @@ def prepare_argument(arg, process_id, name, connection, file):
             arg = connection.encode_process_graph(arg, process_id, name)
         else:
             for key in arg:
-                arg[key] = prepare_argument(arg[key], process_id, name, connection, file)
-    
+                arg[key] = prepare_argument(
+                    arg[key], process_id, name, connection, file
+                )
+
     elif isinstance(arg, list):
         for i in range(len(arg)):
             arg[i] = prepare_argument(arg[i], process_id, name, connection, file)
@@ -142,7 +148,7 @@ def prepare_argument(arg, process_id, name, connection, file):
     return arg
 
 
-def prepare_results(connection, file, example, result = None):
+def prepare_results(connection, file, example, result=None):
     # go through the example and result recursively and convert datetimes to iso strings
     # could be used for more conversions in the future...
 
@@ -150,7 +156,7 @@ def prepare_results(connection, file, example, result = None):
         # handle external references to files
         if isinstance(example, dict) and "$ref" in example:
             example = load_ref(example["$ref"], file)
-        
+
         if "type" in example:
             if example["type"] == "datetime":
                 example = isostr_to_datetime(example["value"])
@@ -165,14 +171,18 @@ def prepare_results(connection, file, example, result = None):
                 if key not in result:
                     (example[key], _) = prepare_results(connection, file, example[key])
                 else:
-                    (example[key], result[key]) = prepare_results(connection, file, example[key], result[key])
-    
+                    (example[key], result[key]) = prepare_results(
+                        connection, file, example[key], result[key]
+                    )
+
     elif isinstance(example, list):
         for i in range(len(example)):
             if i >= len(result):
                 (example[i], _) = prepare_results(connection, file, example[i])
             else:
-                (example[i], result[i]) = prepare_results(connection, file, example[i], result[i])
+                (example[i], result[i]) = prepare_results(
+                    connection, file, example[i], result[i]
+                )
 
     return (example, result)
 
@@ -205,7 +215,9 @@ def check_non_json_values(value):
 
 
 def check_exception(example, result):
-    assert isinstance(result, Exception), "Excpected an exception, but got {}".format(result)
+    assert isinstance(result, Exception), "Excpected an exception, but got {}".format(
+        result
+    )
     if isinstance(example["throws"], str):
         if result.__class__.__name__ != example["throws"]:
             warnings.warn(
@@ -218,32 +230,37 @@ def check_exception(example, result):
 
 
 def check_return_value(example, result, connection, file):
-    assert not isinstance(result, Exception), "Unexpected exception: {} ".format(str(result))
+    assert not isinstance(result, Exception), "Unexpected exception: {} ".format(
+        str(result)
+    )
 
     # handle custom types of data
     result = connection.decode_data(result, example["returns"])
 
     # decode special types (currently mostly datetimes and nodata)
-    (example["returns"], result) = prepare_results(connection, file, example["returns"], result)
+    (example["returns"], result) = prepare_results(
+        connection, file, example["returns"], result
+    )
 
     delta = example["delta"] if "delta" in example else 0.0000000001
 
     if isinstance(example["returns"], dict):
-        assert isinstance(result, dict), "Expected a dict but got {}".format(type(result))
+        assert isinstance(result, dict), "Expected a dict but got {}".format(
+            type(result)
+        )
         exclude_regex_paths = []
         exclude_paths = []
         ignore_order_func = None
         if "type" in example["returns"] and example["returns"]["type"] == "datacube":
             # todo: non-standardized
             exclude_regex_paths.append(
-                r"root\['dimensions'\]\[\d+\]\['reference_system'\]"
+                r"root\['dimensions'\]\[[^\]]+\]\['reference_system'\]"
             )
             # todo: non-standardized
             exclude_paths.append("root['nodata']")
             # ignore data if operation is not changing data
             if example["returns"]["data"] is None:
                 exclude_paths.append("root['data']")
-                ignore_order_func = lambda level: "dimensions" in level.path()
 
         diff = DeepDiff(
             example["returns"],
@@ -257,7 +274,9 @@ def check_return_value(example, result, connection, file):
         )
         assert {} == diff, "Differences: {}".format(str(diff))
     elif isinstance(example["returns"], list):
-        assert isinstance(result, list), "Expected a list but got {}".format(type(result))
+        assert isinstance(result, list), "Expected a list but got {}".format(
+            type(result)
+        )
         diff = DeepDiff(
             example["returns"],
             result,
