@@ -1,5 +1,7 @@
+import argparse
 import logging
 import os
+from distutils.util import strtobool
 
 import openeo
 import pytest
@@ -13,6 +15,13 @@ def pytest_addoption(parser):
         action="store",
         default=None,
         help="The openEO backend URL to connect to.",
+    )
+    parser.addoption(
+        "--experimental",
+        type=bool,
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Run tests for experimental functionality or not. By default the tests will be skipped.",
     )
     parser.addoption(
         "--process-levels",
@@ -53,6 +62,24 @@ def backend_url(request) -> str:
     _log.info(f"Using openEO back-end URL {url!r}")
 
     return url
+
+
+@pytest.fixture(scope="session")
+def skip_experimental(request) -> str:
+    """
+    Fixture to determine whether experimental functionality should be tested or not.
+    """
+    # TODO: also support getting it from a config file?
+    if request.config.getoption("--experimental"):
+        skip = False
+    elif "OPENEO_EXPERIMENTAL" in os.environ:
+        skip = bool(strtobool(os.environ["OPENEO_EXPERIMENTAL"]))
+    else:
+        skip = True
+
+    _log.info(f"Skip experimental functionality {skip!r}")
+
+    return skip
 
 
 @pytest.fixture

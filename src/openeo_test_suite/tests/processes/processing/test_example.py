@@ -13,13 +13,13 @@ from openeo_test_suite.lib.process_runner.util import isostr_to_datetime
 examples_path = "assets/processes/tests/*.json5"
 
 
-def get_level(data, test):
-    if "level" in test:
-        level = test["level"]
-    elif "level" in data:
-        level = data["level"]
+def get_prop(prop, data, test, default=None):
+    if prop in test:
+        level = test[prop]
+    elif prop in data:
+        level = data[prop]
     else:
-        level = "L4"
+        level = default
     return level
 
 
@@ -33,24 +33,41 @@ def get_examples():
             with file.open() as f:
                 data = json5.load(f)
                 for test in data["tests"]:
-                    level = get_level(data, test)
-                    examples.append([id, test, file, level])
+                    level = get_prop("level", data, test, "L4")
+                    experimental = get_prop("experimental", data, test, False)
+                    examples.append([id, test, file, level, experimental])
         except Exception as e:
             warnings.warn("Failed to load {} due to {}".format(file, e))
 
     return examples
 
 
-@pytest.mark.parametrize("id,example,file,level", get_examples())
-def test_process(connection, process_levels, processes, id, example, file, level):
-    if len(process_levels) > 0 and level not in process_levels:
+@pytest.mark.parametrize("id,example,file,level, experimental", get_examples())
+def test_process(
+    connection,
+    skip_experimental,
+    process_levels,
+    processes,
+    id,
+    example,
+    file,
+    level,
+    experimental,
+):
+    if skip_experimental and experimental:
+        pytest.skip("Skipping experimental process {}".format(id))
+    elif len(process_levels) > 0 and level not in process_levels:
         pytest.skip(
             "Skipping process {} because {} is not in the specified levels: {}".format(
                 id, level, ", ".join(process_levels)
             )
         )
     elif len(processes) > 0 and id not in processes:
-        pytest.skip("Skipping process {} because it is not in the specified processes".format(id))
+        pytest.skip(
+            "Skipping process {} because it is not in the specified processes".format(
+                id
+            )
+        )
 
     # check whether the process is available
     try:
@@ -73,8 +90,6 @@ def test_process(connection, process_levels, processes, id, example, file, level
     except Exception as e:
         pytest.skip(str(e))
 
-    # todo: handle experimental processes (warning instead of error?)
-    experimental = example["experimental"] if "experimental" in example else False
     throws = bool(example["throws"]) if "throws" in example else False
     returns = "returns" in example
 
