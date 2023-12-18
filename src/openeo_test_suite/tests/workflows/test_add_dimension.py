@@ -1,8 +1,13 @@
 import xarray as xr
 
 
-def test_ndvi_add_dim(cube_one_day_red_nir, b_dim, tmp_path):
+def test_ndvi_add_dim(
+    cube_one_day_red_nir,
+    collection_dims,
+    tmp_path,
+):
     filename = tmp_path / "test_ndvi_add_dim.nc"
+    b_dim = collection_dims["b_dim"]
 
     def compute_ndvi(data):
         red = data.array_element(index=0)

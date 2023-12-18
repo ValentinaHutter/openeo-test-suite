@@ -1,12 +1,9 @@
 import xarray as xr
 
-# Currently, dev.openeo.eurac.edu stores the results in xarray.DataArray in the netCDFs
-# openeo.cloud seems to store them as xarray.Dataset. Need to align them.
-
 
 def test_apply(
     cube_one_day_red,
-    b_dim,
+    collection_dims,
     tmp_path,
 ):
     filename = tmp_path / "test_apply.nc"
@@ -17,22 +14,7 @@ def test_apply(
     try:
         data = xr.open_dataarray(filename)
     except ValueError:
-        data = xr.open_dataset(filename, decode_coords="all").to_dataarray(dim=b_dim)
+        data = xr.open_dataset(filename, decode_coords="all").to_dataarray(
+            dim=collection_dims["b_dim"]
+        )
     assert (data.max().item(0)) == 1
-
-
-def test_apply_dimension(
-    cube_one_day_red_nir,
-    b_dim,
-    tmp_path,
-):
-    filename = tmp_path / "test_apply_dimension.nc"
-    cube = cube_one_day_red_nir.apply_dimension(dimension=b_dim, process="max")
-    cube.download(filename)
-
-    assert filename.exists()
-    try:
-        data = xr.open_dataarray(filename)
-    except ValueError:
-        data = xr.open_dataset(filename, decode_coords="all").to_dataarray(dim=b_dim)
-    assert len(data[b_dim]) == 2

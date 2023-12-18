@@ -3,11 +3,11 @@ import xarray as xr
 
 def test_ndvi_index(
     cube_one_day_red_nir,
-    t_dim,
-    b_dim,
+    collection_dims,
     tmp_path,
 ):
     filename = tmp_path / "test_ndvi_index.nc"
+    b_dim = collection_dims["b_dim"]
 
     def compute_ndvi(data):
         from openeo.processes import array_element
@@ -30,11 +30,11 @@ def test_ndvi_index(
 # Fails if array_index + label is not supported
 def test_ndvi_label(
     cube_one_day_red_nir,
-    t_dim,
-    b_dim,
+    collection_dims,
     tmp_path,
 ):
     filename = tmp_path / "test_ndvi_label.nc"
+    b_dim = collection_dims["b_dim"]
 
     def compute_ndvi(data):
         red = data.array_element(label="B04")

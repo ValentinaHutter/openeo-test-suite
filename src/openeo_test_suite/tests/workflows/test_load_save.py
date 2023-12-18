@@ -7,10 +7,12 @@ import xarray as xr
 
 def test_load_save_netcdf(
     cube_full_extent,
-    b_dim,
+    collection_dims,
     tmp_path,
 ):
     filename = tmp_path / "test_load_save_netcdf.nc"
+    b_dim = collection_dims["b_dim"]
+
     cube_full_extent.download(filename)
 
     assert filename.exists()
@@ -27,6 +29,8 @@ def test_load_save_10x10_netcdf(
     tmp_path,
 ):
     filename = tmp_path / "test_load_save_10x10_netcdf.nc"
+    b_dim = collection_dims["b_dim"]
+
     cube_red_10x10.download(filename)
 
     assert filename.exists()
