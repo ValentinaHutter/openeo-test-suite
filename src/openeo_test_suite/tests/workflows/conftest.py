@@ -152,14 +152,17 @@ def s2_collection():
     If we provide a string, it will be interpreted as openEO Collection.
     If it's an URL, it's interpreted as STAC Collection.
     """
-    # return "https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE"
-    return "https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE_2"
+    return "https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE"
+    # return "https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE_2"
     # return "SENTINEL2_L2A"
 
 
 # TODO: the dimension names are back-end specific, even though they should be the ones from the STAC metadata
 @pytest.fixture
-def collection_dims(s2_collection):
+def collection_dims(
+    connection,
+    s2_collection,
+):
     if "/" in s2_collection:
         # I ocnsider it as a STAC url
         parsed_url = urllib.parse.urlparse(s2_collection)
@@ -170,7 +173,7 @@ def collection_dims(s2_collection):
         stac_dict = json.loads(stac_api.read_text(s2_collection_url))
     else:
         # I consider it as an openEO Collection
-        stac_dict = dict(conn.describe_collection(s2_collection))
+        stac_dict = dict(connection.describe_collection(s2_collection))
     collection_dims = dict(b_dim=None, t_dim=None, x_dim=None, y_dim=None, z_dim=None)
     if "cube:dimensions" in stac_dict:
         for dim in stac_dict["cube:dimensions"]:
