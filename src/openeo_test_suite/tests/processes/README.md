@@ -9,13 +9,16 @@
 
 ## Individual Process Testing
 
-Examples:
+### Examples
 
 - `pytest --openeo-backend-url=https://openeo.cloud --processes=min,max`
 - `pytest --runner=vito --process-levels=L1,L2,L2A`
 - `pytest --runner=dask`
+- `pytest src/openeo_test_suite/tests/processes/processing/test_example.py --runner=dask`
 
-Parameters:
+### Parameters
+
+Specify `src/openeo_test_suite/tests/processes/processing/test_example.py` to only run individual process tests.
 
 - `--runner`: The execution engine. One of:
   - `vito` (needs <https://github.com/Open-EO/openeo-python-driver> being installed)
