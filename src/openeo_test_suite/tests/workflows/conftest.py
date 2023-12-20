@@ -50,8 +50,21 @@ def cube_one_day_red(
         "bands": ["B04"],
     }
     if "http" in s2_collection:
+        # check whether the processes are available
+        processes = ["load_stac", "save_result"]
+        for id in processes:
+            try:
+                connection.describe_process(id)
+            except:
+                pytest.skip("Process {} not supported by the backend".format(id))
         cube = connection.load_stac(s2_collection, **params)
     else:
+        processes = ["load_collection", "save_result"]
+        for id in processes:
+            try:
+                connection.describe_process(id)
+            except:
+                pytest.skip("Process {} not supported by the backend".format(id))
         cube = connection.load_collection(s2_collection, **params)
     return cube
 
@@ -69,8 +82,20 @@ def cube_one_day_red_nir(
         "bands": ["B04", "B08"],
     }
     if "http" in s2_collection:
+        processes = ["load_stac", "save_result"]
+        for id in processes:
+            try:
+                connection.describe_process(id)
+            except:
+                pytest.skip("Process {} not supported by the backend".format(id))
         cube = connection.load_stac(s2_collection, **params)
     else:
+        processes = ["load_collection", "save_result"]
+        for id in processes:
+            try:
+                connection.describe_process(id)
+            except:
+                pytest.skip("Process {} not supported by the backend".format(id))
         cube = connection.load_collection(s2_collection, **params)
     return cube
 
@@ -88,8 +113,20 @@ def cube_red_nir(
         "bands": ["B04", "B08"],
     }
     if "http" in s2_collection:
+        processes = ["load_stac", "save_result"]
+        for id in processes:
+            try:
+                connection.describe_process(id)
+            except:
+                pytest.skip("Process {} not supported by the backend".format(id))
         cube = connection.load_stac(s2_collection, **params)
     else:
+        processes = ["load_collection", "save_result"]
+        for id in processes:
+            try:
+                connection.describe_process(id)
+            except:
+                pytest.skip("Process {} not supported by the backend".format(id))
         cube = connection.load_collection(s2_collection, **params)
     return cube
 
@@ -107,25 +144,37 @@ def cube_red_10x10(
         "bands": ["B04"],
     }
     if "http" in s2_collection:
+        processes = ["load_stac", "save_result"]
+        for id in processes:
+            try:
+                connection.describe_process(id)
+            except:
+                pytest.skip("Process {} not supported by the backend".format(id))
         cube = connection.load_stac(s2_collection, **params)
     else:
+        processes = ["load_collection", "save_result"]
+        for id in processes:
+            try:
+                connection.describe_process(id)
+            except:
+                pytest.skip("Process {} not supported by the backend".format(id))
         cube = connection.load_collection(s2_collection, **params)
     return cube
 
 
-@pytest.fixture
-def cube_full_extent(
-    connection,
-    temporal_interval,
-    s2_collection,
-) -> dict:
-    if "http" in s2_collection:
-        cube = connection.load_stac(s2_collection, temporal_extent=temporal_interval)
-    else:
-        # Maybe not the best idea to load a full openEO collection?
-        # It would work fine if the STAC sample collection is replicated
-        return None
-    return cube
+# @pytest.fixture
+# def cube_full_extent(
+#     connection,
+#     temporal_interval,
+#     s2_collection,
+# ) -> dict:
+#     if "http" in s2_collection:
+#         cube = connection.load_stac(s2_collection, temporal_extent=temporal_interval)
+#     else:
+#         # Maybe not the best idea to load a full openEO collection?
+#         # It would work fine if the STAC sample collection is replicated
+#         return None
+#     return cube
 
 
 @pytest.fixture
@@ -166,7 +215,6 @@ def temporal_interval_one_day():
     return ["2022-06-01", "2022-06-03"]
 
 
-# TODO: the dimension names are back-end specific, even though they should be the ones from the STAC metadata
 @pytest.fixture
 def collection_dims(
     connection,
@@ -198,3 +246,27 @@ def collection_dims(
                 if stac_dict["cube:dimensions"][dim]["axis"] == "z":
                     collection_dims["z_dim"] = dim
     return collection_dims
+
+
+@pytest.fixture
+def geotiff_not_supported(connection):
+    output_file_formats = [
+        x.lower() for x in dict(connection.list_file_formats()["output"])
+    ]
+    geotiff_not_available = (
+        False
+        if len(set(["geotiff", "gtiff", "tiff", "tif"]) & set(output_file_formats)) > 0
+        else True
+    )
+    return geotiff_not_available
+
+
+@pytest.fixture
+def netcdf_not_supported(connection):
+    output_file_formats = [
+        x.lower() for x in dict(connection.list_file_formats()["output"])
+    ]
+    netcdf_not_available = (
+        False if len(set(["nc", "netcdf"]) & set(output_file_formats)) > 0 else True
+    )
+    return netcdf_not_available

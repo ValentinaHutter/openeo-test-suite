@@ -1,15 +1,18 @@
 import numpy as np
+import pytest
 import rioxarray
 import xarray as xr
 
-# import openeo_processes_dask
-
 
 def test_load_save_netcdf(
+    netcdf_not_supported,
     cube_red_nir,
     collection_dims,
     tmp_path,
 ):
+    if netcdf_not_supported:
+        pytest.skip("NetCDF not supported as output file format!")
+
     filename = tmp_path / "test_load_save_netcdf.nc"
     b_dim = collection_dims["b_dim"]
     x_dim = collection_dims["x_dim"]
@@ -32,11 +35,15 @@ def test_load_save_netcdf(
 
 
 def test_load_save_10x10_netcdf(
+    netcdf_not_supported,
     cube_red_10x10,
     collection_dims,
     tmp_path,
     bounding_box_32632_10x10,
 ):
+    if netcdf_not_supported:
+        pytest.skip("NetCDF not supported as output file format!")
+
     filename = tmp_path / "test_load_save_10x10_netcdf.nc"
     b_dim = collection_dims["b_dim"]
     x_dim = collection_dims["x_dim"]
@@ -66,7 +73,12 @@ def test_load_save_10x10_netcdf(
 
 # The next test will fail if the back-end allows to store only 3D (x,y,bands) cubes to geoTIFF
 # In this test, only a single acquisition in time should be loaded
-def test_load_save_geotiff(cube_one_day_red, tmp_path):
+
+
+def test_load_save_geotiff(geotiff_not_supported, cube_one_day_red, tmp_path):
+    if geotiff_not_supported:
+        pytest.skip("GeoTIFF not supported as output file format!")
+
     filename = tmp_path / "test_load_save_geotiff.tiff"
     cube_one_day_red.download(filename)
 
