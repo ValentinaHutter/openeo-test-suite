@@ -40,7 +40,7 @@ def test_apply_dimension_quantiles_1(
     cube = cube_red_nir.apply_dimension(
         process=lambda d: quantiles(d, [0.25, 0.5, 0.75]),
         dimension=t_dim,
-        target_dimension=b_dim
+        target_dimension=b_dim,
     )
 
     cube.download(filename)

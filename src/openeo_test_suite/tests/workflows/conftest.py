@@ -1,11 +1,13 @@
 import json
-import urllib
 import os
+import urllib
+
 import numpy as np
 import openeo
 import pystac
 import pystac_client
 import pytest
+
 
 @pytest.fixture
 def s2_collection(request) -> str:
@@ -24,6 +26,7 @@ def s2_collection(request) -> str:
             "No S2 test collection found. Specify it using the `--s2-collection` command line option or through the 'S2_COLLECTION' environment variable"
         )
     return collection
+
 
 @pytest.fixture
 def auto_authenticate() -> bool:
