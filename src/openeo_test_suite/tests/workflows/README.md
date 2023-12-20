@@ -5,7 +5,7 @@
 The tests are designed to run using [syncronous calls](https://open-eo.github.io/openeo-python-client/basics.html#download-synchronously) and a test collection available here: https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE . The same collection is provided with different temporal and bands dimension labels here: https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE_2 .
 The reason behind the creation of two test collections is due to the fact of non-optimal implementation of the `load_stac` process in the various back-ends.
 1. CDSE and VITO load the data assigning to the temporal dimension the `t` label and to the bands dimension the `bands` label. To test this back-end it is necessary to use the https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE collection.
-2. EURAC and EODC load the data assigning to the temporal dimension the `time` label and to the bands dimension the `band` label. To test this back-end it is necessary to use the https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE collection.
+2. EURAC and EODC load the data assigning to the temporal dimension the `time` label and to the bands dimension the `band` label. To test this back-end it is necessary to use the https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE_2 collection.
 
 ### Notes:
 
