@@ -12,58 +12,79 @@ The reason behind the creation of two test collections is due to the fact of non
 Before running the tests, it is necessary to modify the s2_collection fixture in conftest.py, depending on the load_stac availability and the back-end naming conventions.
 
 
-### VITO https://openeo.vito.be/openeo/1.2/:
+### VITO
+
+Uncomment line to use https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE in [conftest.py](https://github.com/Open-EO/openeo-test-suite/blob/main/src/openeo_test_suite/tests/workflows/conftest.py).
+
 ```
 export OPENEO_BACKEND_URL=https://openeo.vito.be/openeo/1.2/
 unset OPENEO_AUTH_METHOD
+pytest
 ```
 
-1. Uncomment line to use https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE in [conftest.py](https://github.com/Open-EO/openeo-test-suite/blob/main/src/openeo_test_suite/tests/workflows/conftest.py).
-2. When specifying a spatial_extent in WGS84 in load_stac, the returned area is much bigger than expected, works fine with the original data projection (EPSG:32632). This makes the returned data size large and slow down all the requests (see time below).
-3. If not specifying a spatial_extent, the returned data has a no data padding that make it slightly larger.
+Known issues:
+1. When specifying a spatial_extent in WGS84 in load_stac, the returned area is much bigger than expected, works fine with the original data projection (EPSG:32632). This makes the returned data size large and slow down all the requests (see time below).
+2. If not specifying a spatial_extent, the returned data has a no data padding that make it slightly larger.
 3. VITO returns always a netCDF that has to be decoded as an xarray.Dataset. This makes the test where the bands dim (NDVI) is reduced to fail, since the result contain always a band (with default name "var")
-4. An old discussion about apply_dimension: https://discuss.eodc.eu/t/quantiles-with-apply-dimension/481/2
 
 `========= 3 failed, 7 passed, 1 warning, 1 error in 269.97s (0:04:29) ==========`
 
-### CDSE https://openeo.dataspace.copernicus.eu/openeo/1.2
+### CDSE
+
+Uncomment line to use https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE in [conftest.py](https://github.com/Open-EO/openeo-test-suite/blob/main/src/openeo_test_suite/tests/workflows/conftest.py).
+
 ```
 export OPENEO_BACKEND_URL=https://openeo.dataspace.copernicus.eu/openeo/1.2
 unset OPENEO_AUTH_METHOD
+pytest
 ```
-
+Known issues:
 1. Same as for VITO
 
-### EURAC https://dev.openeo.eurac.edu:
+### EURAC
+
+Uncomment line to use https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE_2 in [conftest.py](https://github.com/Open-EO/openeo-test-suite/blob/main/src/openeo_test_suite/tests/workflows/conftest.py).
+
 ```
 export OPENEO_BACKEND_URL=https://dev.openeo.eurac.edu
 export OPENEO_AUTH_METHOD=basic
 export OPENEO_AUTH_BASIC_USERNAME=guest
 export OPENEO_AUTH_BASIC_PASSWORD=changeme
+pytest
 ```
-1. Uncomment line to use https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE_2 in [conftest.py](https://github.com/Open-EO/openeo-test-suite/blob/main/src/openeo_test_suite/tests/workflows/conftest.py). Opened issues for the used libraries https://github.com/opendatacube/odc-stac/issues/136 https://github.com/gjoseph92/stackstac/issues/236
+
+Known issues:
+1. Opened issues for the default dimension names for the used libraries https://github.com/gjoseph92/stackstac/issues/236 (also here https://github.com/opendatacube/odc-stac/issues/136)
 2. The loaded data has a 5 meters shift compared to the original COGs: https://github.com/gjoseph92/stackstac/issues/207
 3. Clarify apply_dimension behaviour: https://github.com/Open-EO/openeo-processes-dask/issues/213
-
-Currently, dev.openeo.eurac.edu stores the results in xarray.DataArray in the netCDFs. CDSE/VITO store them as xarray.Dataset. Need to align them.
+4. Currently, dev.openeo.eurac.edu stores the results in xarray.DataArray in the netCDFs. CDSE/VITO store them as xarray.Dataset. Need to align them?
 
 `========= 3 failed, 7 passed, 1 warning, 1 error in 10.54s ==========`
 
-### EODC https://openeo.eodc.eu/openeo/1.1.0:
+### EODC
+
+Uncomment line to use https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE_2 in [conftest.py](https://github.com/Open-EO/openeo-test-suite/blob/main/src/openeo_test_suite/tests/workflows/conftest.py).
+
 ```
 export OPENEO_BACKEND_URL=https://openeo.eodc.eu/openeo/1.1.0
 unset OPENEO_AUTH_METHOD
+pytest
 ```
 
+Known issues:
 1. Internal error ` Error: local variable 'days' referenced before ...
 ` doesn't allow to test anything
 
 `========= 10 failed, 1 error in 32.52s ==========`
 
-### SentinelHub https://openeo.eodc.eu/openeo/1.1.0:
+### SentinelHub
+
+Uncomment line to use SENTINEL2_L2A instead of the STAC url in [conftest.py](https://github.com/Open-EO/openeo-test-suite/blob/main/src/openeo_test_suite/tests/workflows/conftest.py).
+
 ```
 export OPENEO_BACKEND_URL=https://openeo.sentinel-hub.com/production
 unset OPENEO_AUTH_METHOD
+pytest
 ```
 
 1. `load_stac` is not supported, need to set to use SENTINEL2_L2A instead of the STAC url in conftest.py.
