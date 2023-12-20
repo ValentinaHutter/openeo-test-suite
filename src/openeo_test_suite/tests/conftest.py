@@ -32,6 +32,12 @@ def pytest_addoption(parser):
         default=None,
         help="A specific test runner to use for individual process tests. If not provided, uses a default HTTP API runner.",
     )
+    parser.addoption(
+        "--s2-collection",
+        action="store",
+        default=None,
+        help="The data collection to test against. It can be either a Sentinel-2 STAC Collection or the name of an openEO Sentinel-2 Collection provided by the back-end.",
+    )
 
 
 @pytest.fixture(scope="session")

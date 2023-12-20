@@ -1,12 +1,29 @@
 import json
 import urllib
-
+import os
 import numpy as np
 import openeo
 import pystac
 import pystac_client
 import pytest
 
+@pytest.fixture
+def s2_collection(request) -> str:
+    """
+    Fixture to provide the data collection to test against.
+    If we provide a string, it will be interpreted as openEO Collection.
+    If it's an URL, it's interpreted as STAC Collection.
+    """
+    # TODO: also support getting it from a config file?
+    if request.config.getoption("--s2-collection"):
+        collection = request.config.getoption("--s2-collection")
+    elif "S2_COLLECTION" in os.environ:
+        collection = os.environ["S2_COLLECTION"]
+    else:
+        raise RuntimeError(
+            "No S2 test collection found. Specify it using the `--s2-collection` command line option or through the 'S2_COLLECTION' environment variable"
+        )
+    return collection
 
 @pytest.fixture
 def auto_authenticate() -> bool:
@@ -144,17 +161,6 @@ def temporal_interval():
 @pytest.fixture
 def temporal_interval_one_day():
     return ["2022-06-01", "2022-06-03"]
-
-
-@pytest.fixture
-def s2_collection():
-    """
-    If we provide a string, it will be interpreted as openEO Collection.
-    If it's an URL, it's interpreted as STAC Collection.
-    """
-    return "https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE"
-    # return "https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE_2"
-    # return "SENTINEL2_L2A"
 
 
 # TODO: the dimension names are back-end specific, even though they should be the ones from the STAC metadata

@@ -1,26 +1,30 @@
-# openEO tests for validation of full process graphs.
+# Tests for full openEO workflows (process graphs)
 
-## Introduction
+The tests are designed to run using [syncronous calls](https://open-eo.github.io/openeo-python-client/basics.html#download-synchronously) and a Sentinel-2 Collection.
 
-The tests are designed to run using [syncronous calls](https://open-eo.github.io/openeo-python-client/basics.html#download-synchronously) and a test collection available here: https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE .
-(The same collection is provided with different temporal and bands dimension names here: https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE_2)
-The reason behind the creation of two test collections is due to the fact of non-optimal implementation of the `load_stac` process in the various back-ends.
-1. CDSE and VITO load the data assigning to the temporal dimension the `t` label and to the bands dimension the `bands` label. To test this back-end it is necessary to use the https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE collection.
-2. EURAC and EODC load the data assigning to the temporal dimension the `time` label and to the bands dimension the `band` label. To test this back-end it is necessary to use the https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE_2 collection.
+Examples:
 
-### Notes:
+- `pytest --openeo-backend-url=https://openeo.dataspace.copernicus.eu/openeo/1.2 --s2-collection=https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE`
+- `pytest --openeo-backend-url=https://openeo.dataspace.copernicus.eu/openeo/1.2 --s2-collection=https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE --process-levels=L1,L2,L2A`
 
-Before running the tests, it is necessary to modify the s2_collection fixture in conftest.py, depending on the load_stac availability and the back-end naming conventions.
+Parameters:
+
+- `--s2-collection`: the data collection to test against. It can be either a Sentinel-2 STAC Collection or the name of an openEO Sentinel-2 Collection provided by the back-end.
+- `--process-levels`: all process profiles to test against, separated by comma. You need to list all levels explicitly, e.g., L2 does not include L1 automatically. Example: L1,L2,L2A. By default tests against all processes.
+
+
+## Notes
+
+- Only the workflows containing processes that are exposed under the `/processes` endpoint are tested. If `load_stac` is not available, the `--s2-collection` parameter must be set to an existing openEO S2 collection.
+
+- Tests are divided by process levels, defined [here](https://openeo.org/documentation/1.0/developers/profiles/processes.html).
 
 
 ### VITO
 
-Uncomment line to use https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE in [conftest.py](https://github.com/Open-EO/openeo-test-suite/blob/main/src/openeo_test_suite/tests/workflows/conftest.py).
-
 ```
-export OPENEO_BACKEND_URL=https://openeo.vito.be/openeo/1.2/
 unset OPENEO_AUTH_METHOD
-pytest
+pytest --openeo-backend-url=https://openeo.vito.be/openeo/1.2/ --s2-collection=https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE
 ```
 
 Known issues:
@@ -32,26 +36,20 @@ Known issues:
 
 ### CDSE
 
-Uncomment line to use https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE in [conftest.py](https://github.com/Open-EO/openeo-test-suite/blob/main/src/openeo_test_suite/tests/workflows/conftest.py).
-
 ```
-export OPENEO_BACKEND_URL=https://openeo.dataspace.copernicus.eu/openeo/1.2
 unset OPENEO_AUTH_METHOD
-pytest
+pytest --openeo-backend-url=https://openeo.dataspace.copernicus.eu/openeo/1.2 --s2-collection=https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE
 ```
 Known issues:
 1. Same as for VITO
 
 ### EURAC
 
-Uncomment line to use https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE_2 in [conftest.py](https://github.com/Open-EO/openeo-test-suite/blob/main/src/openeo_test_suite/tests/workflows/conftest.py).
-
 ```
-export OPENEO_BACKEND_URL=https://dev.openeo.eurac.edu
 export OPENEO_AUTH_METHOD=basic
 export OPENEO_AUTH_BASIC_USERNAME=guest
 export OPENEO_AUTH_BASIC_PASSWORD=changeme
-pytest
+pytest --openeo-backend-url=https://dev.openeo.eurac.edu --s2-collection=https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE_2
 ```
 
 Known issues:
@@ -64,12 +62,9 @@ Known issues:
 
 ### EODC
 
-Uncomment line to use https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE_2 in [conftest.py](https://github.com/Open-EO/openeo-test-suite/blob/main/src/openeo_test_suite/tests/workflows/conftest.py).
-
 ```
-export OPENEO_BACKEND_URL=https://openeo.eodc.eu/openeo/1.1.0
 unset OPENEO_AUTH_METHOD
-pytest
+pytest --openeo-backend-url=https://openeo.eodc.eu/openeo/1.1.0 --s2-collection=https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE_2
 ```
 
 Known issues:
@@ -80,12 +75,9 @@ Known issues:
 
 ### SentinelHub
 
-Uncomment line to use SENTINEL2_L2A instead of the STAC url in [conftest.py](https://github.com/Open-EO/openeo-test-suite/blob/main/src/openeo_test_suite/tests/workflows/conftest.py).
-
 ```
-export OPENEO_BACKEND_URL=https://openeo.sentinel-hub.com/production
 unset OPENEO_AUTH_METHOD
-pytest
+pytest --openeo-backend-url=https://openeo.sentinel-hub.com/production --s2-collection=SENTINEL2_L2A
 ```
 
 1. `load_stac` is not supported, need to set to use SENTINEL2_L2A instead of the STAC url in conftest.py.
@@ -96,3 +88,10 @@ FAILED test_load_save.py::test_load_save_geotiff - openeo.rest.OpenEoApiError: [
 ```
 
 `========= 10 failed, 1 error in 13.50s ==========`
+
+
+### Additional Info
+
+The reason behind the creation of two test collections is due to the fact of non-optimal implementation of the `load_stac` process in the various back-ends.
+1. CDSE and VITO load the data assigning to the temporal dimension the `t` label and to the bands dimension the `bands` label. To test this back-end it is necessary to use the https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE collection.
+2. EURAC and EODC load the data assigning to the temporal dimension the `time` label and to the bands dimension the `band` label. To test this back-end it is necessary to use the https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE_2 collection.
