@@ -6,14 +6,17 @@ import xarray as xr
 
 
 def test_load_save_netcdf(
-    cube_full_extent,
+    cube_red_nir,
     collection_dims,
     tmp_path,
 ):
     filename = tmp_path / "test_load_save_netcdf.nc"
     b_dim = collection_dims["b_dim"]
+    x_dim = collection_dims["x_dim"]
+    y_dim = collection_dims["y_dim"]
+    t_dim = collection_dims["t_dim"]
 
-    cube_full_extent.download(filename)
+    cube_red_nir.download(filename)
 
     assert filename.exists()
     try:
@@ -21,15 +24,24 @@ def test_load_save_netcdf(
     except ValueError:
         data = xr.open_dataset(filename, decode_coords="all").to_dataarray(dim=b_dim)
     assert len(data.dims) == 4
+    assert b_dim in data.dims
+    assert x_dim in data.dims
+    assert y_dim in data.dims
+    assert t_dim in data.dims
+    assert len(data[b_dim]) == 2
 
 
 def test_load_save_10x10_netcdf(
     cube_red_10x10,
-    b_dim,
+    collection_dims,
     tmp_path,
+    bounding_box_32632_10x10,
 ):
     filename = tmp_path / "test_load_save_10x10_netcdf.nc"
     b_dim = collection_dims["b_dim"]
+    x_dim = collection_dims["x_dim"]
+    y_dim = collection_dims["y_dim"]
+    t_dim = collection_dims["t_dim"]
 
     cube_red_10x10.download(filename)
 
@@ -38,10 +50,17 @@ def test_load_save_10x10_netcdf(
         data = xr.open_dataarray(filename)
     except ValueError:
         data = xr.open_dataset(filename, decode_coords="all").to_dataarray(dim=b_dim)
-    # print(data.openeo.x_dim)
-    assert (
-        len(data.dims) == 4
-    )  # TODO: use xarray accessor from openeo_processes_dask to get dim names
+    assert (len(data.dims) == 4)
+    assert b_dim in data.dims
+    assert x_dim in data.dims
+    assert y_dim in data.dims
+    assert t_dim in data.dims
+    # Check that the requested AOI in included in the returned netCDF
+    assert(data[x_dim].min().values <= bounding_box_32632_10x10["west"])
+    assert(data[x_dim].max().values >= bounding_box_32632_10x10["east"])
+    assert(data[y_dim].min().values <= bounding_box_32632_10x10["north"])
+    assert(data[y_dim].max().values >= bounding_box_32632_10x10["south"])
+    # Check that we got exactly 100x100 pixels
     assert np.prod(data.shape) == 100
 
 

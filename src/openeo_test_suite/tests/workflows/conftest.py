@@ -183,7 +183,7 @@ def collection_dims(
     else:
         # I consider it as an openEO Collection
         stac_dict = dict(connection.describe_collection(s2_collection))
-    collection_dims = dict(b_dim=None, t_dim=None, x_dim=None, y_dim=None, z_dim=None)
+    collection_dims = dict(b_dim="bands", t_dim="t", x_dim="x", y_dim="y", z_dim="z")
     if "cube:dimensions" in stac_dict:
         for dim in stac_dict["cube:dimensions"]:
             if stac_dict["cube:dimensions"][dim]["type"] == "bands":
