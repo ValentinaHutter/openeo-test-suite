@@ -48,9 +48,18 @@ class ProcessTestRunner:
         """
         raise Exception("datacubes not implemented yet")
 
-    def decode_data(self, data: Any) -> Any:
+    def encode_data(self, data: Any) -> Any:
         """
-        Converts data from the internal backend representation to the process test/JSON5 representation
+        Converts data from the process test/JSON5 representation to the internal backend representation,
+        excluding datacubes and labeled arrays.
+        For example: JSON data types to numpy arrays.
+        openEO process tests specification -> backend
+        """
+        return data
+
+    def decode_data(self, data: Any, expected: Any) -> Any:
+        """
+        Converts data from the internal backend representation to the process test/JSON5 representation.
         For example: numpy values to JSON data types, labeled-array or datacube to
         JSON object representation.
         backend -> openEO process tests specification
@@ -63,3 +72,9 @@ class ProcessTestRunner:
         If True, the runner will skip all tests that contain non JSON values such as infinity and NaN.
         """
         return False
+
+    def get_nodata_value(self) -> Any:
+        """
+        Returns the nodata value of the backend.
+        """
+        return None

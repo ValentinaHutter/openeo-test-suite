@@ -7,8 +7,20 @@ import pytest
 import xarray as xr
 from deepdiff import DeepDiff
 
+from openeo_test_suite.lib.process_runner.util import isostr_to_datetime
+
 # glob path to the test files
 examples_path = "assets/processes/tests/*.json5"
+
+
+def get_prop(prop, data, test, default=None):
+    if prop in test:
+        level = test[prop]
+    elif prop in data:
+        level = data[prop]
+    else:
+        level = default
+    return level
 
 
 def get_examples():
@@ -21,23 +33,30 @@ def get_examples():
             with file.open() as f:
                 data = json5.load(f)
                 for test in data["tests"]:
-                    if "level" in test:
-                        level = test["level"]
-                    elif "level" in data:
-                        level = data["level"]
-                    else:
-                        level = "L4"
-
-                    examples.append([id, test, file, level])
+                    level = get_prop("level", data, test, "L4")
+                    experimental = get_prop("experimental", data, test, False)
+                    examples.append([id, test, file, level, experimental])
         except Exception as e:
             warnings.warn("Failed to load {} due to {}".format(file, e))
 
     return examples
 
 
-@pytest.mark.parametrize("id,example,file,level", get_examples())
-def test_process(connection, process_levels, processes, id, example, file, level):
-    if len(process_levels) > 0 and level not in process_levels:
+@pytest.mark.parametrize("id,example,file,level, experimental", get_examples())
+def test_process(
+    connection,
+    skip_experimental,
+    process_levels,
+    processes,
+    id,
+    example,
+    file,
+    level,
+    experimental,
+):
+    if skip_experimental and experimental:
+        pytest.skip("Skipping experimental process {}".format(id))
+    elif len(process_levels) > 0 and level not in process_levels:
         pytest.skip(
             "Skipping process {} because {} is not in the specified levels: {}".format(
                 id, level, ", ".join(process_levels)
@@ -45,8 +64,8 @@ def test_process(connection, process_levels, processes, id, example, file, level
         )
     elif len(processes) > 0 and id not in processes:
         pytest.skip(
-            "Skipping process {} because it is not in the specified processes: {}".format(
-                id, ", ".join(processes)
+            "Skipping process {} because it is not in the specified processes".format(
+                id
             )
         )
 
@@ -62,11 +81,7 @@ def test_process(connection, process_levels, processes, id, example, file, level
             try:
                 connection.describe_process(pid)
             except:
-                pytest.skip(
-                    "Test requires additional process {} which is not available".format(
-                        pid
-                    )
-                )
+                pytest.skip("Test requires missing process {}".format(pid))
 
     # prepare the arguments from test JSON encoding to internal backend representations
     # or skip if not supported by the test runner
@@ -75,8 +90,6 @@ def test_process(connection, process_levels, processes, id, example, file, level
     except Exception as e:
         pytest.skip(str(e))
 
-    # todo: handle experimental processes (warning instead of error?)
-    experimental = example["experimental"] if "experimental" in example else False
     throws = bool(example["throws"]) if "throws" in example else False
     returns = "returns" in example
 
@@ -91,63 +104,110 @@ def test_process(connection, process_levels, processes, id, example, file, level
         if isinstance(result, Exception):
             check_exception(example, result)
         else:
-            check_return_value(example, result, connection)
+            check_return_value(example, result, connection, file)
     elif throws:
         check_exception(example, result)
     elif returns:
-        check_return_value(example, result, connection)
+        check_return_value(example, result, connection, file)
     else:
-        pytest.skip("Test doesn't provide an expected result")
+        pytest.skip(
+            "Test for process {} doesn't provide an expected result for arguments: {}".format(
+                id, example["arguments"]
+            )
+        )
 
 
 def prepare_arguments(arguments, process_id, connection, file):
     for name in arguments:
-        arg = arguments[name]
-
-        # handle external references to files
-        if isinstance(arg, dict) and "$ref" in arg:
-            arg = load_ref(arg["$ref"], file)
-
-        # handle custom types of data
-        if isinstance(arg, dict):
-            if "type" in arg:
-                # labeled arrays
-                if arg["type"] == "labeled-array":
-                    arg = connection.encode_labeled_array(arg)
-                # datacubes
-                elif arg["type"] == "datacube":
-                    if "data" in arg:
-                        arg["data"] = load_datacube(arg)
-                    arg = connection.encode_datacube(arg)
-            elif "process_graph" in arg:
-                arg = connection.encode_process_graph(arg, process_id, name)
-
-        if connection.is_json_only():
-            check_non_json_values(arg)
-
-        arguments[name] = arg
+        arguments[name] = prepare_argument(
+            arguments[name], process_id, name, connection, file
+        )
 
     return arguments
 
 
-def load_datacube(cube):
-    if isinstance(cube["data"], str):
-        path = posixpath.join(cube["path"], cube["data"])
-        if path.endswith(".nc"):
-            return xr.open_dataarray(path)
+def prepare_argument(arg, process_id, name, connection, file):
+    # handle external references to files
+    if isinstance(arg, dict) and "$ref" in arg:
+        arg = load_ref(arg["$ref"], file)
+
+    # handle custom types of data
+    if isinstance(arg, dict):
+        if "type" in arg:
+            # labeled arrays
+            if arg["type"] == "labeled-array":
+                arg = connection.encode_labeled_array(arg)
+            # datacubes
+            elif arg["type"] == "datacube":
+                arg = connection.encode_datacube(arg)
+            # nodata-values
+            elif arg["type"] == "nodata":
+                arg = connection.get_nodata_value()
+        elif "process_graph" in arg:
+            arg = connection.encode_process_graph(arg, process_id, name)
         else:
-            raise Exception("Datacubes from non-netCDF files not implemented yet")
-    else:
-        return cube["data"]
+            for key in arg:
+                arg[key] = prepare_argument(
+                    arg[key], process_id, name, connection, file
+                )
+
+    elif isinstance(arg, list):
+        for i in range(len(arg)):
+            arg[i] = prepare_argument(arg[i], process_id, name, connection, file)
+
+    arg = connection.encode_data(arg)
+
+    if connection.is_json_only():
+        check_non_json_values(arg)
+
+    return arg
+
+
+def prepare_results(connection, file, example, result=None):
+    # go through the example and result recursively and convert datetimes to iso strings
+    # could be used for more conversions in the future...
+
+    if isinstance(example, dict):
+        # handle external references to files
+        if isinstance(example, dict) and "$ref" in example:
+            example = load_ref(example["$ref"], file)
+
+        if "type" in example:
+            if example["type"] == "datetime":
+                example = isostr_to_datetime(example["value"])
+                try:
+                    result = isostr_to_datetime(result)
+                except:
+                    pass
+            elif example["type"] == "nodata":
+                example = connection.get_nodata_value()
+        else:
+            for key in example:
+                if key not in result:
+                    (example[key], _) = prepare_results(connection, file, example[key])
+                else:
+                    (example[key], result[key]) = prepare_results(
+                        connection, file, example[key], result[key]
+                    )
+
+    elif isinstance(example, list):
+        for i in range(len(example)):
+            if i >= len(result):
+                (example[i], _) = prepare_results(connection, file, example[i])
+            else:
+                (example[i], result[i]) = prepare_results(
+                    connection, file, example[i], result[i]
+                )
+
+    return (example, result)
 
 
 def load_ref(ref, file):
-    if ref.endswith(".json") or ref.endswith(".json5"):
+    if ref.endswith(".json") or ref.endswith(".json5") or ref.endswith(".geojson"):
         try:
             path = posixpath.join(file.parent, ref)
             with open(path) as f:
                 data = json5.load(f)
-                data["path"] = path
                 return data
         except Exception as e:
             raise Exception("Failed to load external reference {}: {}".format(ref, e))
@@ -170,7 +230,9 @@ def check_non_json_values(value):
 
 
 def check_exception(example, result):
-    assert isinstance(result, Exception)
+    assert isinstance(result, Exception), "Excpected an exception, but got {}".format(
+        result
+    )
     if isinstance(example["throws"], str):
         if result.__class__.__name__ != example["throws"]:
             warnings.warn(
@@ -182,33 +244,71 @@ def check_exception(example, result):
         # assert result.__class__.__name__ == example["throws"]
 
 
-def check_return_value(example, result, connection):
-    assert not isinstance(result, Exception)
+def check_return_value(example, result, connection, file):
+    assert not isinstance(result, Exception), "Unexpected exception: {} ".format(
+        str(result)
+    )
 
     # handle custom types of data
-    result = connection.decode_data(result)
+    result = connection.decode_data(result, example["returns"])
+
+    # decode special types (currently mostly datetimes and nodata)
+    (example["returns"], result) = prepare_results(
+        connection, file, example["returns"], result
+    )
+
+    delta = example["delta"] if "delta" in example else 0.0000000001
 
     if isinstance(example["returns"], dict):
-        assert isinstance(result, dict)
-        assert {} == DeepDiff(
+        assert isinstance(result, dict), "Expected a dict but got {}".format(
+            type(result)
+        )
+        exclude_regex_paths = []
+        exclude_paths = []
+        ignore_order_func = None
+        if "type" in example["returns"] and example["returns"]["type"] == "datacube":
+            # todo: non-standardized
+            exclude_regex_paths.append(
+                r"root\['dimensions'\]\[[^\]]+\]\['reference_system'\]"
+            )
+            # todo: non-standardized
+            exclude_paths.append("root['nodata']")
+            # ignore data if operation is not changing data
+            if example["returns"]["data"] is None:
+                exclude_paths.append("root['data']")
+
+        diff = DeepDiff(
             example["returns"],
             result,
-            significant_digits=10,  # todo
+            math_epsilon=delta,
             ignore_numeric_type_changes=True,
-            exclude_paths=["root['nodata']"],  # todo: non-standardized
-            exclude_regex_paths=[
-                r"root\['dimensions'\]\[\d+\]\['reference_system'\]"  # todo: non-standardized
-            ],
+            ignore_nan_inequality=True,
+            exclude_paths=exclude_paths,
+            exclude_regex_paths=exclude_regex_paths,
+            ignore_order_func=ignore_order_func,
         )
+        assert {} == diff, "Differences: {}".format(str(diff))
+    elif isinstance(example["returns"], list):
+        assert isinstance(result, list), "Expected a list but got {}".format(
+            type(result)
+        )
+        diff = DeepDiff(
+            example["returns"],
+            result,
+            math_epsilon=delta,
+            ignore_numeric_type_changes=True,
+            ignore_nan_inequality=True,
+        )
+        assert {} == diff, "Differences: {}".format(str(diff))
     elif isinstance(example["returns"], float) and math.isnan(example["returns"]):
-        assert math.isnan(result)
+        assert math.isnan(result), "Got {} instead of NaN".format(result)
     elif isinstance(example["returns"], float) or isinstance(example["returns"], int):
         msg = "Expected a numerical result but got {} of type {}".format(
             result, type(result)
         )
         assert isinstance(result, float) or isinstance(result, int), msg
+        assert not math.isnan(result), "Got unexpected NaN as result"
         # handle numerical data with a delta
-        delta = example["delta"] if "delta" in example else 0.0000000001
         assert result == pytest.approx(example["returns"], delta)
     else:
         msg = "Expected {} but got {}".format(example["returns"], result)

@@ -2,15 +2,21 @@ from datetime import datetime, timezone
 
 import numpy as np
 import xarray as xr
+from dateutil.parser import parse
 
 
-def numpy_to_native(data):
+def numpy_to_native(data, expected):
     # Converting numpy dtypes to native python types
     if isinstance(data, np.ndarray) or isinstance(data, np.generic):
-        if data.size == 1:
-            return data.item()
-        elif data.size > 1:
+        if isinstance(expected, list):
             return data.tolist()
+        else:
+            if data.size == 0:
+                return None
+            if data.size == 1:
+                return data.item()
+            elif data.size > 1:
+                return data.tolist()
 
     return data
 
@@ -18,7 +24,8 @@ def numpy_to_native(data):
 def datacube_to_xarray(cube):
     coords = []
     crs = None
-    for dim in cube["dimensions"]:
+    for name in cube["order"]:
+        dim = cube["dimensions"][name]
         if dim["type"] == "temporal":
             # date replace for older Python versions that don't support ISO parsing (only available since 3.11)
             values = [
@@ -31,7 +38,7 @@ def datacube_to_xarray(cube):
         else:
             values = dim["values"]
 
-        coords.append((dim["name"], values))
+        coords.append((name, values))
 
     da = xr.DataArray(cube["data"], coords=coords)
     if crs is not None:
@@ -45,14 +52,16 @@ def xarray_to_datacube(data):
     if not isinstance(data, xr.DataArray):
         return data
 
-    dims = []
+    order = list(data.dims)
+
+    dims = {}
     for c in data.coords:
         type = "bands"
         values = []
         axis = None
-        if isinstance(data.coords[c].values[0], np.datetime64):
+        if np.issubdtype(data.coords[c].dtype, np.datetime64):
             type = "temporal"
-            values = [iso_datetime(date) for date in data.coords[c].values]
+            values = [datetime_to_isostr(date) for date in data.coords[c].values]
         else:
             values = data.coords[c].values.tolist()
             if c == "x":  # todo: non-standardized
@@ -62,14 +71,20 @@ def xarray_to_datacube(data):
                 type = "spatial"
                 axis = "y"
 
-        dim = {"name": c, "type": type, "values": values}
+        dim = {"type": type, "values": values}
         if axis is not None:
             dim["axis"] = axis
         if "crs" in data.attrs:
             dim["reference_system"] = data.attrs["crs"]  # todo: non-standardized
-        dims.append(dim)
 
-    cube = {"type": "datacube", "dimensions": dims, "data": data.values.tolist()}
+        dims[c] = dim
+
+    cube = {
+        "type": "datacube",
+        "order": order,
+        "dimensions": dims,
+        "data": data.values.tolist(),
+    }
 
     if "nodata" in data.attrs:
         cube["nodata"] = data.attrs["nodata"]  # todo: non-standardized
@@ -77,7 +92,11 @@ def xarray_to_datacube(data):
     return cube
 
 
-def iso_datetime(dt):
+def isostr_to_datetime(dt):
+    return parse(dt)
+
+
+def datetime_to_isostr(dt):
     # Convert numpy.datetime64 to timestamp (in seconds)
     timestamp = dt.astype("datetime64[s]").astype(int)
     # Create a datetime object from the timestamp
