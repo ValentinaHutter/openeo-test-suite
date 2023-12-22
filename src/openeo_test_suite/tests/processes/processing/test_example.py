@@ -203,7 +203,7 @@ def prepare_results(connection, file, example, result=None):
 
 
 def load_ref(ref, file):
-    if ref.endswith(".json") or ref.endswith(".json5"):
+    if ref.endswith(".json") or ref.endswith(".json5") or ref.endswith(".geojson"):
         try:
             path = posixpath.join(file.parent, ref)
             with open(path) as f:
