@@ -4,6 +4,7 @@ import inspect
 import dask
 from openeo_pg_parser_networkx import OpenEOProcessGraph, ProcessRegistry
 from openeo_pg_parser_networkx.process_registry import Process
+from openeo_pg_parser_networkx.pg_schema import BoundingBox
 from openeo_processes_dask.process_implementations.core import process
 
 from openeo_test_suite.lib.process_runner.base import ProcessTestRunner
@@ -66,6 +67,15 @@ class Dask(ProcessTestRunner):
 
     def encode_datacube(self, data):
         return datacube_to_xarray(data)
+    
+    def encode_data(self, data):
+        if isinstance(data, dict) and "south" in data and "west" in data and "north" in data and "east" in data:
+            try:
+                return BoundingBox(**data)
+            except Exception as e:
+                raise Exception("Failed to parse bounding box: {}".format(str(e)))
+        
+        return data
 
     def decode_data(self, data, expected):
         if isinstance(data, dask.array.core.Array):

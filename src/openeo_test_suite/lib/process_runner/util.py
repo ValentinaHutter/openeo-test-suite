@@ -45,6 +45,7 @@ def datacube_to_xarray(cube):
         da.attrs["crs"] = crs  # todo: non-standardized
     if "nodata" in cube:
         da.attrs["nodata"] = cube["nodata"]  # todo: non-standardized
+
     return da
 
 

@@ -203,16 +203,18 @@ def prepare_results(connection, file, example, result=None):
 
 
 def load_ref(ref, file):
-    if ref.endswith(".json") or ref.endswith(".json5") or ref.endswith(".geojson"):
-        try:
-            path = posixpath.join(file.parent, ref)
+    try:
+        path = posixpath.join(file.parent, ref)
+        if ref.endswith(".json") or ref.endswith(".json5") or ref.endswith(".geojson"):
             with open(path) as f:
-                data = json5.load(f)
-                return data
-        except Exception as e:
-            raise Exception("Failed to load external reference {}: {}".format(ref, e))
-    else:
-        raise Exception("External references to non-JSON files not implemented yet")
+                return json5.load(f)
+        elif ref.endswith(".txt") or ref.endswith(".wkt2"):
+            with open(path) as f:
+                return f.read()
+        else:
+            raise Exception("External references to files with the given extension not implemented yet.")
+    except Exception as e:
+        raise Exception("Failed to load external reference {}: {}".format(ref, e))
 
 
 def check_non_json_values(value):
