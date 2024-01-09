@@ -1,7 +1,8 @@
-import xarray as xr
 import pytest
+import xarray as xr
 
 LEVEL = "L1"
+
 
 def test_ndvi_index(
     netcdf_not_supported,
@@ -10,12 +11,13 @@ def test_ndvi_index(
     collection_dims,
     tmp_path,
 ):
-    
     if netcdf_not_supported:
         pytest.skip("NetCDF not supported as output file format!")
 
     if len(process_levels) > 0 and LEVEL not in process_levels:
-        pytest.skip(f"Skipping {LEVEL} workflow because the specified levels are: {process_levels}")
+        pytest.skip(
+            f"Skipping {LEVEL} workflow because the specified levels are: {process_levels}"
+        )
 
     filename = tmp_path / "test_ndvi_index.nc"
     b_dim = collection_dims["b_dim"]
@@ -45,7 +47,6 @@ def test_ndvi_label(
     collection_dims,
     tmp_path,
 ):
- 
     if netcdf_not_supported:
         pytest.skip("NetCDF not supported as output file format!")
 

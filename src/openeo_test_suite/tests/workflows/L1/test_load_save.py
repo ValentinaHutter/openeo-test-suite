@@ -5,6 +5,7 @@ import xarray as xr
 
 LEVEL = "L1"
 
+
 def test_load_save_netcdf(
     netcdf_not_supported,
     process_levels,
@@ -16,7 +17,9 @@ def test_load_save_netcdf(
         pytest.skip("NetCDF not supported as output file format!")
 
     if len(process_levels) > 0 and LEVEL not in process_levels:
-        pytest.skip(f"Skipping {LEVEL} workflow because the specified levels are: {process_levels}")
+        pytest.skip(
+            f"Skipping {LEVEL} workflow because the specified levels are: {process_levels}"
+        )
 
     filename = tmp_path / "test_load_save_netcdf.nc"
     b_dim = collection_dims["b_dim"]
