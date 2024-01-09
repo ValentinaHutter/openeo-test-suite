@@ -5,12 +5,12 @@ The tests are designed to run using [syncronous calls](https://open-eo.github.io
 Examples:
 
 - `pytest --openeo-backend-url=https://openeo.dataspace.copernicus.eu/openeo/1.2 --s2-collection=https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE`
-- `pytest --openeo-backend-url=https://openeo.dataspace.copernicus.eu/openeo/1.2 --s2-collection=https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE --process-levels=L1,L2,L2A`
+- `pytest --openeo-backend-url=https://openeo.dataspace.copernicus.eu/openeo/1.2 --s2-collection=https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE --process-levels=L1,L2,L3`
 
 Parameters:
 
 - `--s2-collection`: the data collection to test against. It can be either a Sentinel-2 STAC Collection or the name of an openEO Sentinel-2 Collection provided by the back-end.
-- `--process-levels`: all process profiles to test against, separated by comma. You need to list all levels explicitly, e.g., L2 does not include L1 automatically. Example: L1,L2,L2A. By default tests against all processes.
+- `--process-levels`: all process profiles to test against, separated by comma. You need to list all levels explicitly, e.g., L2 does not include L1 automatically. Example: L1,L2,L3. By default tests against all processes.
 
 
 ## Notes
@@ -80,7 +80,7 @@ unset OPENEO_AUTH_METHOD
 pytest --openeo-backend-url=https://openeo.sentinel-hub.com/production --s2-collection=SENTINEL2_L2A
 ```
 
-1. `load_stac` is not supported, need to set to use SENTINEL2_L2A instead of the STAC url in conftest.py.
+1. `load_stac` is not supported, need to set to use SENTINEL2_L2A openEO Collection of the STAC url in conftest.py.
 2. Can't run most of the tests, since they rely on netCDF output format (not supported).
 3. The single test using geoTIFF as output format fails with:
 ```

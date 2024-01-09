@@ -1,11 +1,22 @@
 import xarray as xr
+import pytest
 
+LEVEL = "L3"
 
 def test_reduce_time_merge(
+    netcdf_not_supported,
+    process_levels,
     cube_red_nir,
     collection_dims,
     tmp_path,
 ):
+        
+    if netcdf_not_supported:
+        pytest.skip("NetCDF not supported as output file format!")
+
+    if len(process_levels) > 0 and LEVEL not in process_levels:
+        pytest.skip(f"Skipping {LEVEL} workflow because the specified levels are: {process_levels}")
+
     filename = tmp_path / "test_reduce_time_merge.nc"
     b_dim = collection_dims["b_dim"]
     t_dim = collection_dims["t_dim"]
