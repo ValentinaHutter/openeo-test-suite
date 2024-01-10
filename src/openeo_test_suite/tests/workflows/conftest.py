@@ -43,7 +43,7 @@ def cube_one_day_red(
     bounding_box,
     temporal_interval_one_day,
     s2_collection,
-) -> dict:
+) -> openeo.DataCube:
     params = {
         "spatial_extent": bounding_box,
         "temporal_extent": temporal_interval_one_day,
@@ -75,7 +75,7 @@ def cube_one_day_red_nir(
     bounding_box,
     temporal_interval_one_day,
     s2_collection,
-) -> dict:
+) -> openeo.DataCube:
     params = {
         "spatial_extent": bounding_box,
         "temporal_extent": temporal_interval_one_day,
@@ -106,7 +106,7 @@ def cube_red_nir(
     bounding_box,
     temporal_interval,
     s2_collection,
-) -> dict:
+) -> openeo.DataCube:
     params = {
         "spatial_extent": bounding_box,
         "temporal_extent": temporal_interval,
@@ -137,7 +137,7 @@ def cube_red_10x10(
     bounding_box_32632_10x10,
     temporal_interval_one_day,
     s2_collection,
-) -> dict:
+) -> openeo.DataCube:
     params = {
         "spatial_extent": bounding_box_32632_10x10,
         "temporal_extent": temporal_interval_one_day,
