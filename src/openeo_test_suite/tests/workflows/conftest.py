@@ -8,6 +8,8 @@ import pystac
 import pystac_client
 import pytest
 
+from openeo_test_suite.lib.workflows.skipping import Skipper
+
 
 @pytest.fixture
 def s2_collection(request) -> str:
@@ -249,24 +251,5 @@ def collection_dims(
 
 
 @pytest.fixture
-def geotiff_not_supported(connection):
-    output_file_formats = [
-        x.lower() for x in dict(connection.list_file_formats()["output"])
-    ]
-    geotiff_not_available = (
-        False
-        if len(set(["geotiff", "gtiff", "tiff", "tif"]) & set(output_file_formats)) > 0
-        else True
-    )
-    return geotiff_not_available
-
-
-@pytest.fixture
-def netcdf_not_supported(connection):
-    output_file_formats = [
-        x.lower() for x in dict(connection.list_file_formats()["output"])
-    ]
-    netcdf_not_available = (
-        False if len(set(["nc", "netcdf"]) & set(output_file_formats)) > 0 else True
-    )
-    return netcdf_not_available
+def skipper(connection, process_levels) -> Skipper:
+    return Skipper(connection=connection, process_levels=process_levels)
