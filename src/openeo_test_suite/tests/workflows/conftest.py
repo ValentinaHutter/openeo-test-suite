@@ -8,8 +8,6 @@ import pystac
 import pystac_client
 import pytest
 
-from openeo_test_suite.lib.workflows.skipping import Skipper
-
 
 @pytest.fixture
 def s2_collection(request) -> str:
@@ -45,6 +43,7 @@ def cube_one_day_red(
     bounding_box,
     temporal_interval_one_day,
     s2_collection,
+    skipper,
 ) -> openeo.DataCube:
     params = {
         "spatial_extent": bounding_box,
@@ -52,21 +51,10 @@ def cube_one_day_red(
         "bands": ["B04"],
     }
     if "http" in s2_collection:
-        # check whether the processes are available
-        processes = ["load_stac", "save_result"]
-        for id in processes:
-            try:
-                connection.describe_process(id)
-            except:
-                pytest.skip("Process {} not supported by the backend".format(id))
+        skipper.skip_if_unsupported_process(["load_stac", "save_result"])
         cube = connection.load_stac(s2_collection, **params)
     else:
-        processes = ["load_collection", "save_result"]
-        for id in processes:
-            try:
-                connection.describe_process(id)
-            except:
-                pytest.skip("Process {} not supported by the backend".format(id))
+        skipper.skip_if_unsupported_process(["load_collection", "save_result"])
         cube = connection.load_collection(s2_collection, **params)
     return cube
 
@@ -77,6 +65,7 @@ def cube_one_day_red_nir(
     bounding_box,
     temporal_interval_one_day,
     s2_collection,
+    skipper,
 ) -> openeo.DataCube:
     params = {
         "spatial_extent": bounding_box,
@@ -84,20 +73,10 @@ def cube_one_day_red_nir(
         "bands": ["B04", "B08"],
     }
     if "http" in s2_collection:
-        processes = ["load_stac", "save_result"]
-        for id in processes:
-            try:
-                connection.describe_process(id)
-            except:
-                pytest.skip("Process {} not supported by the backend".format(id))
+        skipper.skip_if_unsupported_process(["load_stac", "save_result"])
         cube = connection.load_stac(s2_collection, **params)
     else:
-        processes = ["load_collection", "save_result"]
-        for id in processes:
-            try:
-                connection.describe_process(id)
-            except:
-                pytest.skip("Process {} not supported by the backend".format(id))
+        skipper.skip_if_unsupported_process(["load_collection", "save_result"])
         cube = connection.load_collection(s2_collection, **params)
     return cube
 
@@ -108,6 +87,7 @@ def cube_red_nir(
     bounding_box,
     temporal_interval,
     s2_collection,
+    skipper,
 ) -> openeo.DataCube:
     params = {
         "spatial_extent": bounding_box,
@@ -115,20 +95,10 @@ def cube_red_nir(
         "bands": ["B04", "B08"],
     }
     if "http" in s2_collection:
-        processes = ["load_stac", "save_result"]
-        for id in processes:
-            try:
-                connection.describe_process(id)
-            except:
-                pytest.skip("Process {} not supported by the backend".format(id))
+        skipper.skip_if_unsupported_process(["load_stac", "save_result"])
         cube = connection.load_stac(s2_collection, **params)
     else:
-        processes = ["load_collection", "save_result"]
-        for id in processes:
-            try:
-                connection.describe_process(id)
-            except:
-                pytest.skip("Process {} not supported by the backend".format(id))
+        skipper.skip_if_unsupported_process(["load_collection", "save_result"])
         cube = connection.load_collection(s2_collection, **params)
     return cube
 
@@ -139,6 +109,7 @@ def cube_red_10x10(
     bounding_box_32632_10x10,
     temporal_interval_one_day,
     s2_collection,
+    skipper,
 ) -> openeo.DataCube:
     params = {
         "spatial_extent": bounding_box_32632_10x10,
@@ -146,20 +117,10 @@ def cube_red_10x10(
         "bands": ["B04"],
     }
     if "http" in s2_collection:
-        processes = ["load_stac", "save_result"]
-        for id in processes:
-            try:
-                connection.describe_process(id)
-            except:
-                pytest.skip("Process {} not supported by the backend".format(id))
+        skipper.skip_if_unsupported_process(["load_stac", "save_result"])
         cube = connection.load_stac(s2_collection, **params)
     else:
-        processes = ["load_collection", "save_result"]
-        for id in processes:
-            try:
-                connection.describe_process(id)
-            except:
-                pytest.skip("Process {} not supported by the backend".format(id))
+        skipper.skip_if_unsupported_process(["load_collection", "save_result"])
         cube = connection.load_collection(s2_collection, **params)
     return cube
 
@@ -248,8 +209,3 @@ def collection_dims(
                 if stac_dict["cube:dimensions"][dim]["axis"] == "z":
                     collection_dims["z_dim"] = dim
     return collection_dims
-
-
-@pytest.fixture
-def skipper(connection, process_levels) -> Skipper:
-    return Skipper(connection=connection, process_levels=process_levels)

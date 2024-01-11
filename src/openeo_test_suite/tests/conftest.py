@@ -6,6 +6,8 @@ from distutils.util import strtobool
 import openeo
 import pytest
 
+from openeo_test_suite.lib.skipping import Skipper
+
 _log = logging.getLogger(__name__)
 
 
@@ -165,3 +167,8 @@ def connection(backend_url: str, auto_authenticate: bool, capfd) -> openeo.Conne
                 con.authenticate_oidc()
 
     return con
+
+
+@pytest.fixture
+def skipper(connection, process_levels) -> Skipper:
+    return Skipper(connection=connection, process_levels=process_levels)

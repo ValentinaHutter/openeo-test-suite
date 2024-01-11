@@ -53,6 +53,7 @@ def test_process(
     file,
     level,
     experimental,
+    skipper,
 ):
     if skip_experimental and experimental:
         pytest.skip("Skipping experimental process {}".format(id))
@@ -70,18 +71,11 @@ def test_process(
         )
 
     # check whether the process is available
-    try:
-        connection.describe_process(id)
-    except:
-        pytest.skip("Process {} not supported by the backend".format(id))
+    skipper.skip_if_unsupported_process([id])
 
     # check whether any additionally required processes are available
     if "required" in example:
-        for pid in example["required"]:
-            try:
-                connection.describe_process(pid)
-            except:
-                pytest.skip("Test requires missing process {}".format(pid))
+        skipper.skip_if_unsupported_process(example["required"])
 
     # prepare the arguments from test JSON encoding to internal backend representations
     # or skip if not supported by the test runner

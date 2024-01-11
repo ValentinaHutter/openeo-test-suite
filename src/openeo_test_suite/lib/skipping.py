@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import Iterable, List, Union
 
 import openeo
 import pytest
@@ -39,4 +39,19 @@ class Skipper:
         if len(self._process_levels) > 0 and level not in self._process_levels:
             pytest.skip(
                 f"Skipping {level} test because the specified levels are: {self._process_levels}"
+            )
+
+    def skip_if_unsupported_process(self, processes: Union[str, Iterable[str]]):
+        """
+        Skip test if any of the provided processes is not supported by the backend.
+
+        @param processes: single process id or list of process ids
+        """
+        if isinstance(processes, str):
+            processes = [processes]
+        available_processes = set(p["id"] for p in self._connection.list_processes())
+        unsupported_processes = set(processes).difference(available_processes)
+        if unsupported_processes:
+            pytest.skip(
+                f"Skipping test because backend does not support: {unsupported_processes}"
             )
