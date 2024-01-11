@@ -57,17 +57,11 @@ def test_process(
 ):
     if skip_experimental and experimental:
         pytest.skip("Skipping experimental process {}".format(id))
-    elif len(process_levels) > 0 and level not in process_levels:
+
+    skipper.skip_if_unmatching_process_level(level)
+    if id not in processes:
         pytest.skip(
-            "Skipping process {} because {} is not in the specified levels: {}".format(
-                id, level, ", ".join(process_levels)
-            )
-        )
-    elif len(processes) > 0 and id not in processes:
-        pytest.skip(
-            "Skipping process {} because it is not in the specified processes".format(
-                id
-            )
+            "Skipping process {id!r} because it is not in the specified processes"
         )
 
     # check whether the process is available
@@ -82,6 +76,7 @@ def test_process(
     try:
         arguments = prepare_arguments(example["arguments"], id, connection, file)
     except Exception as e:
+        # TODO: skipping on a generic `Exception` is very liberal and might hide real issues
         pytest.skip(str(e))
 
     throws = bool(example["throws"]) if "throws" in example else False
@@ -104,6 +99,8 @@ def test_process(
     elif returns:
         check_return_value(example, result, connection, file)
     else:
+        # TODO: skipping at this point of test is a bit useless.
+        #       Instead: skip earlier, or just consider the test as passed?
         pytest.skip(
             "Test for process {} doesn't provide an expected result for arguments: {}".format(
                 id, example["arguments"]
@@ -206,7 +203,9 @@ def load_ref(ref, file):
             with open(path) as f:
                 return f.read()
         else:
-            raise Exception("External references to files with the given extension not implemented yet.")
+            raise Exception(
+                "External references to files with the given extension not implemented yet."
+            )
     except Exception as e:
         raise Exception("Failed to load external reference {}: {}".format(ref, e))
 
