@@ -90,6 +90,28 @@ which is driven by the `OPENEO_AUTH_METHOD` environment variable:
     Make sure to check the logging/output of the test suite run
     for instructions on how to complete the authentication flow.
 
+
+## Reporting
+
+Being a `pytest` based test suite, various plugins can be used to generate reports in different formats as desired.
+
+### HTML report
+
+Producing reports in HTML format is enabled by default (using the `pytest-html` plugin).
+Basic usage example
+(note that this usually has to be combined with other `pytests` options commented elsewhere in this document):
+
+    pytest --html=reports/report.html
+
+### JUnitXML report
+
+JUnitXML reports are useful for integration with CI systems like Jenkins.
+Support for it is built-in in `pytest` through the `--junit-xml` option:
+
+    pytest --junit-xml=reports/report.xml
+
+
+
 ## Development and contributions
 
 The test suite builds on [`pytest`](https://pytest.org/),

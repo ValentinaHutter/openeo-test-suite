@@ -20,6 +20,7 @@ dependencies = [
     "pystac-client>=0.7.5",
     "netCDF4>=1.6.0",
     "rioxarray>=0.14.0",
+    "pytest-html>=4.1.0",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
