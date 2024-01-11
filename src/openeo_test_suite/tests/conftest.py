@@ -2,6 +2,7 @@ import argparse
 import logging
 import os
 from distutils.util import strtobool
+from typing import List
 
 import openeo
 import pytest
@@ -73,7 +74,7 @@ def backend_url(request) -> str:
 
 
 @pytest.fixture(scope="session")
-def skip_experimental(request) -> str:
+def skip_experimental(request) -> bool:
     """
     Fixture to determine whether experimental functionality should be tested or not.
     """
@@ -91,7 +92,7 @@ def skip_experimental(request) -> str:
 
 
 @pytest.fixture(scope="session")
-def process_levels(request):
+def process_levels(request) -> List[str]:
     """
     Fixture to get the desired openEO profiles levels.
     """
@@ -110,9 +111,9 @@ def process_levels(request):
 
 
 @pytest.fixture(scope="session")
-def processes(request):
+def processes(request) -> List[str]:
     """
-    Fixture to get the desired profiles to test against.
+    Fixture to get the desired processes to test against.
     """
     processes_str = ""
     # TODO: also support getting it from a config file?
