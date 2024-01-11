@@ -129,7 +129,7 @@ def processes(request) -> List[str]:
         return []
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def auto_authenticate() -> bool:
     """
     Fixture to act as parameterizable toggle for authenticating the connection fixture.
@@ -138,8 +138,10 @@ def auto_authenticate() -> bool:
     return False
 
 
-@pytest.fixture
-def connection(backend_url: str, auto_authenticate: bool, capfd) -> openeo.Connection:
+@pytest.fixture(scope="module")
+def connection(
+    backend_url: str, auto_authenticate: bool, pytestconfig
+) -> openeo.Connection:
     if not backend_url:
         raise RuntimeError(
             "No openEO backend URL found. Specify it using the `--openeo-backend-url` command line option or through the 'OPENEO_BACKEND_URL' environment variable"
@@ -159,7 +161,9 @@ def connection(backend_url: str, auto_authenticate: bool, capfd) -> openeo.Conne
             )
         else:
             # Temporarily disable output capturing, to make sure that OIDC device code instructions (if any) are visible to the user.
-            with capfd.disabled():
+            # Note: this is based on `capfd.disabled()`, but compatible with a wide fixture scopes (e.g. session or module)
+            capmanager = pytestconfig.pluginmanager.getplugin("capturemanager")
+            with capmanager.global_and_fixture_disabled():
                 # Note: this generic `authenticate_oidc()` call allows both:
                 # - device code/refresh token based authentication for manual test suite runs
                 # - client credentials auth through env vars for automated/Jenkins CI runs

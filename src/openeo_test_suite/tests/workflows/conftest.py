@@ -28,7 +28,7 @@ def s2_collection(request) -> str:
     return collection
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def auto_authenticate() -> bool:
     """
     Fixture to act as parameterizable toggle for authenticating the connection fixture.

@@ -27,9 +27,18 @@ def runner(request) -> str:
     return runner
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
+def auto_authenticate() -> bool:
+    """
+    Fixture to act as parameterizable toggle for authenticating the connection fixture.
+    Allows per-test/folder configuration of auto-authentication.
+    """
+    return True
+
+
+@pytest.fixture(scope="module")
 def connection(
-    backend_url: str, runner: str, auto_authenticate: bool, capfd
+    backend_url: str, runner: str, auto_authenticate: bool, pytestconfig
 ) -> ProcessTestRunner:
     if runner == "dask":
         from openeo_test_suite.lib.process_runner.dask import Dask
@@ -44,7 +53,10 @@ def connection(
 
         con = openeo.connect(backend_url)
         if auto_authenticate:
-            with capfd.disabled():
+            # Temporarily disable output capturing, to make sure that OIDC device code instructions (if any) are visible to the user.
+            # Note: this is based on `capfd.disabled()`, but compatible with a wide fixture scopes (e.g. session or module)
+            capmanager = pytestconfig.pluginmanager.getplugin("capturemanager")
+            with capmanager.global_and_fixture_disabled():
                 con.authenticate_oidc()
 
         return Http(con)
