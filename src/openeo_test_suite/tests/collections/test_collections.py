@@ -1,10 +1,12 @@
+import json
 import logging
+
 import pytest
 import requests
 from stac_validator import stac_validator
-import json
 
 _log = logging.getLogger(__name__)
+
 
 def test_collections_links_presence(backend_url):
     """
@@ -18,7 +20,8 @@ def test_collections_links_presence(backend_url):
     data = resp.json()
     assert "collections" in data
     assert "links" in data
-    
+
+
 def test_valid_stac_general(backend_url):
     """
     Tests if the JSON document describing each Collection
@@ -38,7 +41,9 @@ def test_valid_stac_general(backend_url):
         is_valid_stac = stac.validate_dict(c)
         c_id = c["id"]
         if not is_valid_stac:
-            _log.error(f"The general collection JSON for {c_id} is not a valid STAC. stac-validator message: {stac.message}")
+            _log.error(
+                f"The general collection JSON for {c_id} is not a valid STAC. stac-validator message: {stac.message}"
+            )
             all_collections_valid_stac = False
         specific_collection_url = collections_url + "/" + c_id
         resp = requests.get(url=specific_collection_url)
@@ -47,7 +52,9 @@ def test_valid_stac_general(backend_url):
         is_valid_stac = stac.validate_dict(data)
         c_id = data["id"]
         if not is_valid_stac:
-            _log.error(f"The specifc collection JSON for {c_id} is not a valid STAC. stac-validator message: {stac.message}")
+            _log.error(
+                f"The specifc collection JSON for {c_id} is not a valid STAC. stac-validator message: {stac.message}"
+            )
             all_specific_collections_valid_stac = False
     assert all_collections_valid_stac
     assert all_specific_collections_valid_stac
