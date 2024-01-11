@@ -41,6 +41,3 @@ testpaths = [
 filterwarnings = [
     "ignore:(pkg_resources|jsonschema.RefResolver):DeprecationWarning",
 ]
-
-[tool.black]
-line-length = 120
