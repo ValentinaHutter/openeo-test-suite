@@ -4,7 +4,6 @@ import urllib
 
 import numpy as np
 import openeo
-import pystac
 import pystac_client
 import pytest
 
