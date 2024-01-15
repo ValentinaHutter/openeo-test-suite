@@ -1,16 +1,12 @@
-import json
 import logging
 import re
-
-import delayed_assert
-import pytest
-import requests
-from stac_validator import stac_validator
 
 _log = logging.getLogger(__name__)
 
 
 class OpeneoApiCollectionTests:
+    # TODO: This OOP pattern is not necessary, this can just be a bunch of functions. These addition layers leak into the test report, making it harder to read.
+    # TODO: Also, it's not necessary to define this in a separate file, it can just be a function in the test file
     def __init__(self, collection):
         self.test_stac_version(collection)
         self.test_id(collection)
@@ -28,11 +24,11 @@ class OpeneoApiCollectionTests:
         Supports versions 0.9.x and 1.x.x.
         """
 
-        delayed_assert.expect("stac_version" in collection)
-        delayed_assert.expect(isinstance(collection["stac_version"], str))
+        assert "stac_version" in collection
+        assert isinstance(collection["stac_version"], str)
 
         p = re.compile(r"^(0\.9.\d+|1\.\d+.\d+)")
-        delayed_assert.expect(p.match(collection["stac_version"]) is not None)
+        assert p.match(collection["stac_version"])
 
     def test_id(self, collection):
         r"""
@@ -42,11 +38,11 @@ class OpeneoApiCollectionTests:
         match the specified pattern.
         """
 
-        delayed_assert.expect("id" in collection)
-        delayed_assert.expect(isinstance(collection["id"], str))
+        assert "id" in collection
+        assert isinstance(collection["id"], str)
 
         p = re.compile(r"^[\w\-\.~\/]+$")
-        delayed_assert.expect(p.match(collection["id"]) is not None)
+        assert p.match(collection["id"])
 
     def test_version_and_deprecated(self, collection):
         """
@@ -60,22 +56,16 @@ class OpeneoApiCollectionTests:
         """
         raise_error = False
         if "version" in collection or "deprecated" in collection:
-            if "stac_extensions" not in collection:
-                raise_error = True
-            if collection["stac_version"][0] == "0":
-                if "version" not in collection["stac_extensions"]:
-                    raise_error = True
-            if collection["stac_version"][0] == "1":
-                if (
+            assert "stac_extensions" in collection
+            if collection["stac_version"].startswith("0."):
+                assert "version" in collection["stac_extensions"]
+            elif collection["stac_version"].startswith("1."):
+                assert (
                     "https://stac-extensions.github.io/version/v1.2.0/schema.json"
-                    not in collection["stac_extensions"]
-                ):
-                    raise_error = True
-            if raise_error:
-                _log.error(
-                    f"{collection['id']}: The version and/or deprecated properties REQUIRES to add version (STAC < 1.0.0-rc.1) or https://stac-extensions.github.io/version/v1.2.0/schema.json (STAC >= 1.0.0-rc.1) to the list of stac_extensions."
+                    in collection["stac_extensions"]
                 )
-                delayed_assert.expect(0)
+            else:
+                raise ValueError(collection["stac_version"])
 
     def test_cube_dimensions(self, collection):
         """
@@ -94,19 +84,12 @@ class OpeneoApiCollectionTests:
 
         This property REQUIRES to add a version of the data cube extension to the list of stac_extensions, e.g. https://stac-extensions.github.io/datacube/v2.2.0/schema.json.
         """
-
-        delayed_assert.expect("cube:dimensions" in collection)
-        delayed_assert.expect("stac_extensions" in collection)
-        raise_error = True
-        for stac_ext in collection["stac_extensions"]:
-            if "https://stac-extensions.github.io/datacube/" in stac_ext:
-                raise_error = False
-                break
-        if raise_error:
-            _log.error(
-                f"{collection['id']}: The cube:dimensions property REQUIRES to add a version of the data cube extension to the list of stac_extensions, e.g. https://stac-extensions.github.io/datacube/v2.2.0/schema.json."
-            )
-            delayed_assert.expect(0)
+        assert "cube:dimensions" in collection
+        assert "stac_extensions" in collection
+        assert any(
+            ext.startswith("https://stac-extensions.github.io/datacube/")
+            for ext in collection["stac_extensions"]
+        )
 
     def test_summaries(self, collection):
         """
@@ -122,8 +105,8 @@ class OpeneoApiCollectionTests:
             Content Extensions: Domain-specific fields for domains such as EO, SAR and point clouds.
             Custom Properties: It is generally allowed to add custom fields.
         """
-        delayed_assert.expect("summaries" in collection)
-        delayed_assert.expect(isinstance(collection["summaries"], dict))
+        assert "summaries" in collection
+        assert isinstance(collection["summaries"], dict)
 
     def test_assets(self, collection):
         """
@@ -134,10 +117,6 @@ class OpeneoApiCollectionTests:
         Implementing this property REQUIRES to add collection-assets to the list of stac_extensions in STAC < 1.0.0-rc.1.
         """
         if "assets" in collection:
-            delayed_assert.expect(isinstance(collection["assets"], dict))
-            if collection["stac_version"][0] == "0":
-                if "collection-assets" not in collection["stac_extensions"]:
-                    _log.error(
-                        f"{collection['id']}: The assets property REQUIRES to add collection-assets to the list of stac_extensions in STAC < 1.0.0-rc.1."
-                    )
-                    delayed_assert.expect(0)
+            assert isinstance(collection["assets"], dict)
+            if collection["stac_version"].startswith("0."):
+                assert "collection-assets" in collection["stac_extensions"]
