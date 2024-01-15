@@ -7,18 +7,13 @@ from typing import List
 import openeo
 import pytest
 
+from openeo_test_suite.lib.backend_under_test import get_backend_url
 from openeo_test_suite.lib.skipping import Skipper
 
 _log = logging.getLogger(__name__)
 
 
 def pytest_addoption(parser):
-    parser.addoption(
-        "--openeo-backend-url",
-        action="store",
-        default=None,
-        help="The openEO backend URL to connect to.",
-    )
     parser.addoption(
         "--experimental",
         type=bool,
@@ -57,20 +52,7 @@ def backend_url(request) -> str:
     """
     Fixture to get the desired openEO back-end URL to test against.
     """
-    # TODO: also support getting it from a config file?
-    if request.config.getoption("--openeo-backend-url"):
-        url = request.config.getoption("--openeo-backend-url")
-    elif "OPENEO_BACKEND_URL" in os.environ:
-        url = os.environ["OPENEO_BACKEND_URL"]
-    else:
-        url = None
-
-    if isinstance(url, str) and "://" not in url:
-        url = f"https://{url}"
-
-    _log.info(f"Using openEO back-end URL {url!r}")
-
-    return url
+    return get_backend_url(request.config)
 
 
 @pytest.fixture(scope="session")

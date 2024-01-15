@@ -2,12 +2,14 @@ import json
 import logging
 import re
 
-import delayed_assert
 import pytest
 import requests
 from stac_validator import stac_validator
 
 _log = logging.getLogger(__name__)
+
+
+# TODO #18 eliminate delayed_assert usage
 
 
 class OpeneoApiCollectionTests:

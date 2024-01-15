@@ -1,11 +1,14 @@
 import json
 import logging
+import re
 
-import delayed_assert
 import pytest
 import requests
-from openeo_api_collection_tests import OpeneoApiCollectionTests
 from stac_validator import stac_validator
+
+from openeo_test_suite.lib.backend_under_test import get_collection_ids
+
+from .openeo_api_collection_tests import OpeneoApiCollectionTests
 
 _log = logging.getLogger(__name__)
 
@@ -61,3 +64,8 @@ def test_get_collections_collection_id(openeo_collections_ids, backend_url):
 
     for c_id in openeo_collections_ids:
         test_collection_detailed_metadata(c_id, backend_url)
+
+
+@pytest.mark.parametrize("collection_id", get_collection_ids())
+def test_valid_collection_id(collection_id: str):
+    assert re.match(r"^[\w\-.~/]+$", collection_id, flags=re.IGNORECASE)
