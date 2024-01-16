@@ -57,13 +57,26 @@ class NoBackend(_BackendUnderTest):
         return []
 
 
-def get_backend_url(config: pytest.Config) -> Union[str, None]:
+def get_backend_url(config: pytest.Config, required: bool = False) -> Union[str, None]:
     """
-    Get openEO backend URL from command line option or environment variable.
+    Get openEO backend URL from command line options or environment variable.
+
+    :param config: pytest config object, e.g. `request.config` from the `request` fixture
+    :param required: Whether the backend URL must be set or can be None.
+        It's recommended to only require it from within tests and fixtures.
+        In more generic cases it must be considered optional,
+        so that the test suite can be constructed/run even when no backend is specified.
     """
     url = config.getoption(
         "--openeo-backend-url", default=os.environ.get("OPENEO_BACKEND_URL")
     )
+
+    if required and not url:
+        raise ValueError(
+            "No openEO backend URL found."
+            " Specify it using the `--openeo-backend-url` command line option (short form `-U`),"
+            " or through the 'OPENEO_BACKEND_URL' environment variable"
+        )
 
     if isinstance(url, str) and "://" not in url:
         url = f"https://{url}"
