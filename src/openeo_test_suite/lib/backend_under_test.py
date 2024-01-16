@@ -58,7 +58,7 @@ def get_backend_url(config: pytest.Config) -> str:
     else:
         raise RuntimeError(
             "No openEO backend URL found."
-            " Specify it using the `--openeo-backend-url` command line option"
+            " Specify it using the `--openeo-backend-url` command line option (short form `-U`),"
             " or through the 'OPENEO_BACKEND_URL' environment variable"
         )
 
