@@ -59,7 +59,7 @@ def test_process(
         pytest.skip("Skipping experimental process {}".format(id))
 
     skipper.skip_if_unmatching_process_level(level)
-    if id not in processes:
+    if len(processes) > 0 and id not in processes:
         pytest.skip(
             "Skipping process {id!r} because it is not in the specified processes"
         )
