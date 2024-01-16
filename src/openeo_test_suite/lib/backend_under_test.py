@@ -8,6 +8,7 @@ not test collection time, making it practically impossible to implement proper p
 
 
 """
+import abc
 import functools
 import logging
 import os
@@ -19,9 +20,60 @@ import pytest
 _log = logging.getLogger(__name__)
 
 
+class _BackendUnderTest(metaclass=abc.ABCMeta):
+    """Abstract base class for back-end under test."""
+
+    @abc.abstractmethod
+    def list_collection_ids(self) -> List[str]:
+        """List available collections."""
+        ...
+
+    @abc.abstractmethod
+    def list_process_ids(self) -> List[str]:
+        """List available processes."""
+        ...
+
+
+class HttpBackend(_BackendUnderTest):
+    """Back-end under test that uses the openEO HTTP API."""
+
+    def __init__(self, connection: openeo.Connection):
+        self.connection = connection
+
+    def list_collection_ids(self) -> List[str]:
+        return [c["id"] for c in self.connection.list_collections()]
+
+    def list_process_ids(self) -> List[str]:
+        return [p["id"] for p in self.connection.list_processes()]
+
+
+class NoBackend(_BackendUnderTest):
+    """No backend under test, just to get basic test suite setup working."""
+
+    def list_collection_ids(self) -> List[str]:
+        return []
+
+    def list_process_ids(self) -> List[str]:
+        return []
+
+
+def get_backend_url(config: pytest.Config) -> Union[str, None]:
+    """
+    Get openEO backend URL from command line option or environment variable.
+    """
+    url = config.getoption(
+        "--openeo-backend-url", default=os.environ.get("OPENEO_BACKEND_URL")
+    )
+
+    if isinstance(url, str) and "://" not in url:
+        url = f"https://{url}"
+
+    return url
+
+
 # Internal singleton, pointing to backend under test,
 # setup happens in `pytest_configure` hook
-_connection: Union[None, openeo.Connection] = None
+_backend_under_test: Union[None, _BackendUnderTest] = None
 
 
 def pytest_addoption(parser):
@@ -37,48 +89,27 @@ def pytest_addoption(parser):
 
 def pytest_configure(config):
     """Implementation of `pytest_configure` hook."""
-    global _connection
-    assert _connection is None
+    global _backend_under_test
+    assert _backend_under_test is None
     backend_url = get_backend_url(config)
-    _connection = openeo.connect(url=backend_url, auto_validate=False)
-
-
-def get_backend_url(config: pytest.Config) -> str:
-    """
-    Get openEO backend URL from command line option or environment variable.
-    """
-    url = config.getoption("--openeo-backend-url", default=None)
-    if url:
-        _log.info(f"Using openEO backend URL from command line option: {url!r}")
-    elif os.environ.get("OPENEO_BACKEND_URL"):
-        url = os.environ["OPENEO_BACKEND_URL"]
-        _log.info(
-            f"Using openEO backend URL from env var 'OPENEO_BACKEND_URL': {url!r}"
-        )
+    if backend_url is None:
+        _backend_under_test = NoBackend()
     else:
-        raise RuntimeError(
-            "No openEO backend URL found."
-            " Specify it using the `--openeo-backend-url` command line option (short form `-U`),"
-            " or through the 'OPENEO_BACKEND_URL' environment variable"
-        )
-
-    if isinstance(url, str) and "://" not in url:
-        url = f"https://{url}"
-
-    return url
+        connection = openeo.connect(url=backend_url, auto_validate=False)
+        _backend_under_test = HttpBackend(connection=connection)
 
 
-def get_connection() -> openeo.Connection:
-    global _connection
-    assert _connection is not None
-    return _connection
+def _get_backend_under_test() -> _BackendUnderTest:
+    global _backend_under_test
+    assert isinstance(_backend_under_test, _BackendUnderTest)
+    return _backend_under_test
 
 
 @functools.lru_cache
 def get_collection_ids() -> List[str]:
-    return [c["id"] for c in get_connection().list_collections()]
+    return _get_backend_under_test().list_collection_ids()
 
 
 @functools.lru_cache
 def get_process_ids() -> List[str]:
-    return [p["id"] for p in get_connection().list_processes()]
+    return _get_backend_under_test().list_process_ids()
