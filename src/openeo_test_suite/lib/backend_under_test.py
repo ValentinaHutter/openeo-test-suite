@@ -27,6 +27,7 @@ _connection: Union[None, openeo.Connection] = None
 def pytest_addoption(parser):
     """Implementation of `pytest_addoption` hook."""
     parser.addoption(
+        "-U",
         "--openeo-backend-url",
         action="store",
         default=None,
