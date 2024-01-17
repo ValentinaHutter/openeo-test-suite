@@ -26,6 +26,7 @@ Specify `src/openeo_test_suite/tests/processes/processing/test_example.py` to on
   - `http` (**default**, requires `--openeo-backend-url` to be set)
 - `--process-levels`: All [process profiles](https://openeo.org/documentation/1.0/developers/profiles/processes.html) to test against, separated by comma. You need to list all levels explicitly, e.g., L2 does **not** include L1 automatically. Example: `L1,L2,L2A`. By default tests against all processes.
 - `--processes`: A list of processes to test against, separated by comma. Example: `apply,reduce_dimension`. By default tests against all processes.
+- `--experimental`: Enables tests for experimental processes. By default experimental processes will be skipped.
 
 ### Runners
 
