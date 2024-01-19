@@ -1,6 +1,6 @@
 import math
 import warnings
-from pathlib import Path, posixpath
+from pathlib import Path
 
 import json5
 import pytest
@@ -195,7 +195,7 @@ def prepare_results(connection, file, example, result=None):
 
 def load_ref(ref, file):
     try:
-        path = posixpath.join(file.parent, ref)
+        path = file.parent / ref
         if ref.endswith(".json") or ref.endswith(".json5") or ref.endswith(".geojson"):
             with open(path) as f:
                 return json5.load(f)
