@@ -55,9 +55,6 @@ def test_process(
     experimental,
     skipper,
 ):
-    if skip_experimental and experimental:
-        pytest.skip("Skipping experimental process {}".format(id))
-
     skipper.skip_if_unmatching_process_level(level)
     if len(processes) > 0 and id not in processes:
         pytest.skip(
@@ -66,6 +63,9 @@ def test_process(
 
     # check whether the process is available
     skipper.skip_if_unsupported_process([id])
+
+    if skip_experimental and experimental:
+        pytest.skip("Skipping experimental process {}".format(id))
 
     # check whether any additionally required processes are available
     if "required" in example:
