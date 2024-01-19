@@ -1,8 +1,8 @@
 from datetime import datetime, timezone
 
+import dateutil.parser
 import numpy as np
 import xarray as xr
-from dateutil.parser import parse
 
 
 def numpy_to_native(data, expected):
@@ -94,7 +94,7 @@ def xarray_to_datacube(data):
 
 
 def isostr_to_datetime(dt):
-    return parse(dt)
+    return dateutil.parser.parse(dt)
 
 
 def datetime_to_isostr(dt):
