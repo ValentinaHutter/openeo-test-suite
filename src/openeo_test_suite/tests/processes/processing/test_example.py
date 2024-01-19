@@ -203,19 +203,17 @@ def load_ref(ref, file):
             with open(path) as f:
                 return f.read()
         else:
-            raise Exception(
-                "External references to files with the given extension not implemented yet."
-            )
+            raise NotImplementedError(f"Unhandled external reference {ref}.")
     except Exception as e:
-        raise Exception("Failed to load external reference {}: {}".format(ref, e))
+        raise RuntimeError(f"Failed to load external reference {ref}") from e
 
 
 def check_non_json_values(value):
     if isinstance(value, float):
         if math.isnan(value):
-            raise Exception("HTTP JSON APIs don't support NaN values")
+            raise ValueError("HTTP JSON APIs don't support NaN values")
         elif math.isinf(value):
-            raise Exception("HTTP JSON APIs don't support infinity values")
+            raise ValueError("HTTP JSON APIs don't support infinity values")
     elif isinstance(value, dict):
         for key in value:
             check_non_json_values(value[key])
