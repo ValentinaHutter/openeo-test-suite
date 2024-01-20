@@ -60,7 +60,7 @@ def connection(
         from openeo_test_suite.lib.process_runner.http import Http
 
         backend_url = get_backend_url(request.config, required=True)
-        con = openeo.connect(backend_url)
+        con = openeo.connect(backend_url, auto_validate=False)
         if auto_authenticate:
             # Temporarily disable output capturing, to make sure that OIDC device code instructions (if any) are visible to the user.
             # Note: this is based on `capfd.disabled()`, but compatible with a wide fixture scopes (e.g. session or module)
