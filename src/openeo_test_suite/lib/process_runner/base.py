@@ -9,13 +9,6 @@ class ProcessTestRunner:
         """
         pass
 
-    def describe_process(self, process_id: str) -> Dict:
-        """
-        Returns single process description
-        Follows definition of the same function in the openEO Python client
-        """
-        pass
-
     def execute(self, id: str, arguments: Dict) -> Any:
         """
         Executes a process with the given id and arguments.

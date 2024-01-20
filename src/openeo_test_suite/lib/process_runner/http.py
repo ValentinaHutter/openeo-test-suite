@@ -8,9 +8,6 @@ class Http(ProcessTestRunner):
     def list_processes(self):
         return self.connection.list_processes()
 
-    def describe_process(self, process_id):
-        return self.connection.describe_process(process_id)
-
     def execute(self, id, arguments):
         process = {
             "process_graph": {

@@ -12,9 +12,6 @@ class Vito(ProcessTestRunner):
     def list_processes(self):
         return process_registry_2xx.get_specs()
 
-    def describe_process(self, process_id):
-        return process_registry_2xx.get_spec(process_id)
-
     def execute(self, id, arguments):
         fn = process_registry_2xx.get_function(id)
         return fn(arguments, env=None)

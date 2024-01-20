@@ -52,9 +52,6 @@ class Dask(ProcessTestRunner):
     def list_processes(self):
         return map(lambda process: process.spec, registry.values())
 
-    def describe_process(self, process_id):
-        return registry[process_id].spec
-
     def execute(self, id, arguments):
         callable = registry[id].implementation
         return callable(**arguments)
