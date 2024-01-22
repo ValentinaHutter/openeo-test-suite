@@ -15,14 +15,10 @@ def s2_collection(request) -> str:
     If we provide a string, it will be interpreted as openEO Collection.
     If it's an URL, it's interpreted as STAC Collection.
     """
-    # TODO: also support getting it from a config file?
-    if request.config.getoption("--s2-collection"):
-        collection = request.config.getoption("--s2-collection")
-    elif "S2_COLLECTION" in os.environ:
-        collection = os.environ["S2_COLLECTION"]
-    else:
+    collection = request.config.getoption("--s2-collection")
+    if not collection:
         raise RuntimeError(
-            "No S2 test collection found. Specify it using the `--s2-collection` command line option or through the 'S2_COLLECTION' environment variable"
+            "No S2 test collection found. Specify it using the `--s2-collection` command line option."
         )
     return collection
 

@@ -11,7 +11,6 @@ not test collection time, making it practically impossible to implement proper p
 import abc
 import functools
 import logging
-import os
 from typing import List, Union
 
 import openeo
@@ -59,7 +58,7 @@ class NoBackend(_BackendUnderTest):
 
 def get_backend_url(config: pytest.Config, required: bool = False) -> Union[str, None]:
     """
-    Get openEO backend URL from command line options or environment variable.
+    Get openEO backend URL from command line options.
 
     :param config: pytest config object, e.g. `request.config` from the `request` fixture
     :param required: Whether the backend URL must be set or can be None.
@@ -67,15 +66,12 @@ def get_backend_url(config: pytest.Config, required: bool = False) -> Union[str,
         In more generic cases it must be considered optional,
         so that the test suite can be constructed/run even when no backend is specified.
     """
-    url = config.getoption(
-        "--openeo-backend-url", default=os.environ.get("OPENEO_BACKEND_URL")
-    )
+    url = config.getoption("--openeo-backend-url")
 
     if required and not url:
         raise ValueError(
             "No openEO backend URL found."
-            " Specify it using the `--openeo-backend-url` command line option (short form `-U`),"
-            " or through the 'OPENEO_BACKEND_URL' environment variable"
+            " Specify it using the `--openeo-backend-url` command line option (short form `-U`)."
         )
 
     if isinstance(url, str) and "://" not in url:

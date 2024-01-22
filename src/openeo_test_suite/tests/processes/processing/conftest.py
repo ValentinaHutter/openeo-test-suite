@@ -15,16 +15,8 @@ def runner(request) -> str:
     """
     Fixture to get the desired runner to test with.
     """
-    # TODO: also support getting it from a config file?
-    if request.config.getoption("--runner"):
-        runner = request.config.getoption("--runner")
-    elif "OPENEO_RUNNER" in os.environ:
-        runner = os.environ["OPENEO_RUNNER"]
-    else:
-        runner = "skip"
-
+    runner = request.config.getoption("--runner")
     _log.info(f"Using runner {runner!r}")
-
     return runner
 
 

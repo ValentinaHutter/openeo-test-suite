@@ -36,7 +36,7 @@ def pytest_addoption(parser):
     parser.addoption(
         "--runner",
         action="store",
-        default=None,
+        default="skip",
         help="A specific test runner to use for individual process tests. If not provided, uses a default HTTP API runner.",
     )
     parser.addoption(
@@ -52,16 +52,8 @@ def skip_experimental(request) -> bool:
     """
     Fixture to determine whether experimental functionality should be tested or not.
     """
-    # TODO: also support getting it from a config file?
-    if request.config.getoption("--experimental"):
-        skip = False
-    elif "OPENEO_EXPERIMENTAL" in os.environ:
-        skip = bool(strtobool(os.environ["OPENEO_EXPERIMENTAL"]))
-    else:
-        skip = True
-
-    _log.info(f"Skip experimental functionality {skip!r}")
-
+    skip = not request.config.getoption("--experimental")
+    _log.info(f"Skip experimental functionality {skip=}")
     return skip
 
 
@@ -70,12 +62,7 @@ def process_levels(request) -> List[str]:
     """
     Fixture to get the desired openEO profiles levels.
     """
-    levels_str = ""
-    # TODO: also support getting it from a config file?
-    if request.config.getoption("--process-levels"):
-        levels_str = request.config.getoption("--process-levels")
-    elif "OPENEO_PROCESS_LEVELS" in os.environ:
-        levels_str = os.environ["OPENEO_PROCESS_LEVELS"]
+    levels_str = request.config.getoption("--process-levels")
 
     if isinstance(levels_str, str) and len(levels_str) > 0:
         _log.info(f"Testing process levels {levels_str!r}")
@@ -89,12 +76,7 @@ def processes(request) -> List[str]:
     """
     Fixture to get the desired processes to test against.
     """
-    processes_str = ""
-    # TODO: also support getting it from a config file?
-    if request.config.getoption("--processes"):
-        processes_str = request.config.getoption("--processes")
-    elif "OPENEO_PROCESSES" in os.environ:
-        processes_str = os.environ["OPENEO_PROCESSES"]
+    processes_str = request.config.getoption("--processes")
 
     if isinstance(processes_str, str) and len(processes_str) > 0:
         _log.info(f"Testing processes {processes_str!r}")
