@@ -73,6 +73,93 @@ or through an environment variable `OPENEO_BACKEND_URL`
 
 If no explicit protocol is specified, `https://` will be assumed automatically.
 
+
+## Additional run options
+
+In addition to the `--openeo-backend-url` option, there are several other options
+to control some aspects of the test suite run.
+
+### Process selection
+
+Various tests depend on the availability of certain openEO processes.
+It is possible to only run tests for a subset of processes with these
+process selection options:
+
+- `--processes` to define a comma-separated list of processes to test against.
+  - Example: `--processes=min,load_stac_,apply,reduce_dimension`.
+- `--process-levels` to select whole groups of processes based on
+  predefined [process profiles](https://openeo.org/documentation/1.0/developers/profiles/processes.html),
+  specified as a comma-separated list of levels.
+  - Example: `--process-levels=L1,L2`.`
+  - A level does not imply other levels, so each desired level must be specified explicitly.
+    For example, L2 does **not** include L1 automatically.
+- `--experimental`: Enables tests for experimental processes.
+  By default experimental processes will be skipped.
+
+
+### Runner for individual process testing
+
+One module of the test suite is dedicated to **individual process testing**,
+where each process is tested individually with a given set of inputs and expected outputs.
+Because there are a lot of these tests (order of thousands),
+it is very time-consuming to run these through the standard, HTTP based openEO REST API.
+As a countermeasure, the test suite ships with several experimental **runners**
+that aim to execute the tests directly against a (locally running) back-end implementation
+to eliminate HTTP-related and other overhead.
+Note that this typically requires additional dependencies to be installed in your test environment.
+
+The desired runner can be specified through the `--runner` option,
+with currently one of the following options:
+
+- `skip` (**default**): Skip all individual process tests.
+  - This is the default to avoid accidentally running a very heavy/costly test suite.
+- `http`: Run the individual processing tests through a standard openEO REST API.
+  - Requires `--openeo-backend-url` to be set as described above.
+  - As noted above, this will very likely result a very heavy test suite run by default.
+    It is therefore recommended to limit the test suite scope
+    in some way: e.g. limited process selection through `--processes`
+    or running against a dedicated/localhost deployment.
+  - Another limitation of this runner is that not all process tests
+    can be executed as some input-output pairs are not JSON encodable.
+    These tests will be marked as skipped.
+- `dask`: Executes the tests directly via the [openEO Dask implementation](https://github.com/Open-EO/openeo-processes-dask) (as used by EODC, EURAC, and others)
+  - Requires [openeo_processes_dask](https://github.com/Open-EO/openeo-processes-dask) package being installed in test environment.
+  - Covers all implemented processes.
+- `vito`: Executes the tests directly via the
+  [openEO Python Driver implementation](https://github.com/Open-EO/openeo-python-driver) (as used by CDSE, VITO/Terrascope, and others).
+  - Requires [openeo_driver](https://github.com/Open-EO/openeo-python-driver) package being installed in test environment.
+  - Only covers a subset of processes due to the underlying architecture of the back-end implementation.
+    In particular, it only covers the pure Python code paths, but not the PySpark related aspects.
+
+See [openeo_test_suite/lib/process_runner](https://github.com/Open-EO/openeo-test-suite/tree/main/src/openeo_test_suite/lib/process_runner)
+for more details about these runners and inspiration to implement your own runner.
+
+
+#### Usage examples of individual process testing with runner option
+
+The individual process tests can be run by specifying the `src/openeo_test_suite/tests/processes/processing` as test path.
+Some use examples with different options discussed above:
+
+```bash
+# Basic default behavior: run all individual process tests,
+# but with the default runner (skip), so no tests will actually be executed.
+pytest src/openeo_test_suite/tests/processes
+
+# Run tests for a subset of processes with the HTTP runner
+# against the openEO Platform backend at openeo.cloud
+pytest --runner=http --openeo-backend-url=openeo.cloud --processes=min,max src/openeo_test_suite/tests/processes/processing
+
+# Run tests for a subset of processes with the VITO runner
+pytest --runner=vito --process-levels=L1,L2,L2A src/openeo_test_suite/tests/processes/processing
+
+# Run all individual process tests with the Dask runner
+pytest --runner=dask src/openeo_test_suite/tests/processes
+```
+
+
+
+
+
 ## Authentication of the basic `connection` fixture
 
 The test suite provides a basic `connection` fixture
