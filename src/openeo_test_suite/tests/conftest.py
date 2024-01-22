@@ -13,40 +13,6 @@ from openeo_test_suite.lib.skipping import Skipper
 _log = logging.getLogger(__name__)
 
 
-def pytest_addoption(parser):
-    parser.addoption(
-        "--experimental",
-        type=bool,
-        action=argparse.BooleanOptionalAction,
-        default=False,
-        help="Run tests for experimental functionality or not. By default the tests will be skipped.",
-    )
-    parser.addoption(
-        "--process-levels",
-        action="store",
-        default="",
-        help="The openEO process profiles you want to test against, e.g. 'L1,L2,L2A'. Mutually exclusive with --processes.",
-    )
-    parser.addoption(
-        "--processes",
-        action="store",
-        default="",
-        help="The openEO processes you want to test against, e.g. 'apply,reduce_dimension'. Mutually exclusive with --process-levels.",
-    )
-    parser.addoption(
-        "--runner",
-        action="store",
-        default="skip",
-        help="A specific test runner to use for individual process tests. If not provided, uses a default HTTP API runner.",
-    )
-    parser.addoption(
-        "--s2-collection",
-        action="store",
-        default=None,
-        help="The data collection to test against. It can be either a Sentinel-2 STAC Collection or the name of an openEO Sentinel-2 Collection provided by the back-end.",
-    )
-
-
 @pytest.fixture(scope="session")
 def skip_experimental(request) -> bool:
     """

@@ -1,3 +1,3 @@
 pytest_plugins = [
-    "openeo_test_suite.lib.backend_under_test",
+    "openeo_test_suite.lib.pytest_plugin",
 ]
