@@ -17,7 +17,6 @@ def test_filter_bands(
     filename = tmp_path / "test_filter_bbox.nc"
     b_dim = collection_dims["b_dim"]
 
-
     cube = cube_one_day_red_nir.filter_bands(["B08"])
     cube.download(filename)
 

@@ -4,6 +4,10 @@ from openeo_test_suite.lib.workflows.io import (
     load_geotiff_dataarray,
     load_netcdf_dataarray,
 )
+from openeo_test_suite.lib.workflows.parameters import (
+    bounding_box_32632,
+    bounding_box_32632_10x10,
+)
 
 LEVEL = "L1"
 
@@ -13,7 +17,6 @@ def test_load_save_netcdf(
     cube_red_nir,
     collection_dims,
     tmp_path,
-    bounding_box_32632,
 ):
     skipper.skip_if_no_netcdf_support()
     skipper.skip_if_unmatching_process_level(level=LEVEL)
@@ -52,7 +55,6 @@ def test_load_save_10x10_netcdf(
     cube_red_10x10,
     collection_dims,
     tmp_path,
-    bounding_box_32632_10x10,
 ):
     skipper.skip_if_no_netcdf_support()
 
@@ -94,7 +96,6 @@ def test_load_save_geotiff(
     cube_one_day_red,
     collection_dims,
     tmp_path,
-    bounding_box_32632,
 ):
     skipper.skip_if_no_geotiff_support()
 

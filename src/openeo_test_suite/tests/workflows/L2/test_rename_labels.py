@@ -15,7 +15,9 @@ def test_rename_labels_bands(
     filename = tmp_path / "test_rename_labels_bands.nc"
     b_dim = collection_dims["b_dim"]
 
-    renamed_cube = cube_one_day_red_nir.rename_labels(dimension=b_dim,source=["B04","B08"],target=["red","nir"])
+    renamed_cube = cube_one_day_red_nir.rename_labels(
+        dimension=b_dim, source=["B04", "B08"], target=["red", "nir"]
+    )
     renamed_cube.download(filename)
 
     assert filename.exists()
@@ -25,6 +27,7 @@ def test_rename_labels_bands(
     assert b_dim in data.dims
     assert data[b_dim].values[0] == "red"
     assert data[b_dim].values[1] == "nir"
+
 
 def test_rename_labels_time(
     skipper,
@@ -40,7 +43,9 @@ def test_rename_labels_time(
     b_dim = collection_dims["b_dim"]
 
     t_labels = cube_one_day_red_nir.dimension_labels(dimension=t_dim)
-    renamed_cube = cube_one_day_red_nir.rename_labels(dimension=t_dim,source=t_labels,target=["first_date"])
+    renamed_cube = cube_one_day_red_nir.rename_labels(
+        dimension=t_dim, source=t_labels, target=["first_date"]
+    )
     renamed_cube.download(filename)
 
     assert filename.exists()

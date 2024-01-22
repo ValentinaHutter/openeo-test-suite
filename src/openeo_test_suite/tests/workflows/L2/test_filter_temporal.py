@@ -1,4 +1,5 @@
 from openeo_test_suite.lib.workflows.io import load_netcdf_dataarray
+from openeo_test_suite.lib.workflows.parameters import temporal_interval_one_day
 
 LEVEL = "L2"
 
@@ -8,7 +9,6 @@ def test_filter_temporal(
     cube_red_nir,
     collection_dims,
     tmp_path,
-    temporal_interval_one_day,
 ):
     skipper.skip_if_no_netcdf_support()
     skipper.skip_if_unmatching_process_level(level=LEVEL)

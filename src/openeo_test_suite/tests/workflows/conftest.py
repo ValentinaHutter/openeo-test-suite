@@ -7,6 +7,13 @@ import openeo
 import pystac_client
 import pytest
 
+from openeo_test_suite.lib.workflows.parameters import (
+    bounding_box_32632,
+    bounding_box_32632_10x10,
+    temporal_interval,
+    temporal_interval_one_day,
+)
+
 
 @pytest.fixture
 def s2_collection(request) -> str:
@@ -35,8 +42,6 @@ def auto_authenticate() -> bool:
 @pytest.fixture
 def cube_one_day_red(
     connection,
-    bounding_box_32632,
-    temporal_interval_one_day,
     s2_collection,
     skipper,
 ) -> openeo.DataCube:
@@ -57,8 +62,6 @@ def cube_one_day_red(
 @pytest.fixture
 def cube_one_day_red_nir(
     connection,
-    bounding_box_32632,
-    temporal_interval_one_day,
     s2_collection,
     skipper,
 ) -> openeo.DataCube:
@@ -79,8 +82,6 @@ def cube_one_day_red_nir(
 @pytest.fixture
 def cube_red_nir(
     connection,
-    bounding_box_32632,
-    temporal_interval,
     s2_collection,
     skipper,
 ) -> openeo.DataCube:
@@ -101,8 +102,6 @@ def cube_red_nir(
 @pytest.fixture
 def cube_red_10x10(
     connection,
-    bounding_box_32632_10x10,
-    temporal_interval_one_day,
     s2_collection,
     skipper,
 ) -> openeo.DataCube:
@@ -118,58 +117,6 @@ def cube_red_10x10(
         skipper.skip_if_unsupported_process(["load_collection", "save_result"])
         cube = connection.load_collection(s2_collection, **params)
     return cube
-
-
-@pytest.fixture
-def bounding_box(
-    west=10.342, east=11.352, south=46.490, north=46.495, crs="EPSG:4326"
-) -> dict:
-    spatial_extent = {
-        "west": west,
-        "east": east,
-        "south": south,
-        "north": north,
-        "crs": crs,
-    }
-    return spatial_extent
-
-
-@pytest.fixture
-def bounding_box_32632(
-    west=679720, east=680680, south=5151080, north=5151920, crs="EPSG:32632"
-) -> dict:
-    spatial_extent = {
-        "west": west,
-        "east": east,
-        "south": south,
-        "north": north,
-        "crs": crs,
-    }
-    return spatial_extent
-
-
-@pytest.fixture
-def bounding_box_32632_10x10(
-    west=680000, east=680100, south=5151500, north=5151600, crs="EPSG:32632"
-) -> dict:
-    spatial_extent = {
-        "west": west,
-        "east": east,
-        "south": south,
-        "north": north,
-        "crs": crs,
-    }
-    return spatial_extent
-
-
-@pytest.fixture
-def temporal_interval():
-    return ["2022-06-01", "2022-07-01"]
-
-
-@pytest.fixture
-def temporal_interval_one_day():
-    return ["2022-06-01", "2022-06-03"]
 
 
 @pytest.fixture

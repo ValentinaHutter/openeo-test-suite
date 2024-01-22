@@ -34,4 +34,4 @@ def test_boolean_mask(
     unique, counts = np.unique(data, return_counts=True)
     assert 0 in unique
     assert 1 in unique
-    assert len(unique) <= 3 # zeros, ones and maybe NaNs
+    assert len(unique) <= 3  # zeros, ones and maybe NaNs

@@ -1,6 +1,7 @@
 import numpy as np
 
 from openeo_test_suite.lib.workflows.io import load_netcdf_dataarray
+from openeo_test_suite.lib.workflows.parameters import bounding_box_32632_10x10
 
 LEVEL = "L2"
 
@@ -10,7 +11,6 @@ def test_filter_bbox(
     cube_one_day_red,
     collection_dims,
     tmp_path,
-    bounding_box_32632_10x10,
 ):
     skipper.skip_if_no_netcdf_support()
     skipper.skip_if_unmatching_process_level(level=LEVEL)
@@ -37,9 +37,9 @@ def test_filter_bbox(
     # Coordinates from xarray are pixel centers. The bbox provides the bbox bounds.
     x_res = np.abs(data[x_dim][0].values - data[x_dim][1].values)
     y_res = np.abs(data[y_dim][0].values - data[y_dim][1].values)
-    assert (data[x_dim].min().values - x_res/2) <= bounding_box_32632_10x10["west"]
-    assert (data[x_dim].max().values + x_res/2) >= bounding_box_32632_10x10["east"]
-    assert (data[y_dim].min().values - y_res/2) <= bounding_box_32632_10x10["north"]
-    assert (data[y_dim].max().values + y_res/2) >= bounding_box_32632_10x10["south"]
+    assert (data[x_dim].min().values - x_res / 2) <= bounding_box_32632_10x10["west"]
+    assert (data[x_dim].max().values + x_res / 2) >= bounding_box_32632_10x10["east"]
+    assert (data[y_dim].min().values - y_res / 2) <= bounding_box_32632_10x10["north"]
+    assert (data[y_dim].max().values + y_res / 2) >= bounding_box_32632_10x10["south"]
     # Check that we got exactly 100x100 pixels
     assert np.prod(data.shape) == 100
