@@ -85,30 +85,14 @@ def get_backend_url(config: pytest.Config, required: bool = False) -> Union[str,
 _backend_under_test: Union[None, _BackendUnderTest] = None
 
 
-def pytest_addoption(parser):
-    """Implementation of `pytest_addoption` hook."""
-    parser.addoption(
-        "-U",
-        "--openeo-backend-url",
-        action="store",
-        default=None,
-        help="The openEO backend URL to connect to.",
-    )
-
-
-def pytest_configure(config):
-    """Implementation of `pytest_configure` hook."""
+def set_backend_under_test(backend: _BackendUnderTest):
     global _backend_under_test
     assert _backend_under_test is None
-    backend_url = get_backend_url(config)
-    if backend_url is None:
-        _backend_under_test = NoBackend()
-    else:
-        connection = openeo.connect(url=backend_url, auto_validate=False)
-        _backend_under_test = HttpBackend(connection=connection)
+    assert isinstance(backend, _BackendUnderTest)
+    _backend_under_test = backend
 
 
-def _get_backend_under_test() -> _BackendUnderTest:
+def get_backend_under_test() -> _BackendUnderTest:
     global _backend_under_test
     assert isinstance(_backend_under_test, _BackendUnderTest)
     return _backend_under_test
@@ -116,9 +100,9 @@ def _get_backend_under_test() -> _BackendUnderTest:
 
 @functools.lru_cache
 def get_collection_ids() -> List[str]:
-    return _get_backend_under_test().list_collection_ids()
+    return get_backend_under_test().list_collection_ids()
 
 
 @functools.lru_cache
 def get_process_ids() -> List[str]:
-    return _get_backend_under_test().list_process_ids()
+    return get_backend_under_test().list_process_ids()
