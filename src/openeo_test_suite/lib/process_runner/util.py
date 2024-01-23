@@ -1,11 +1,11 @@
 import re
 from datetime import datetime, timezone
+from typing import Union
 
 import numpy as np
-import pandas as pd
 import xarray as xr
 from dateutil.parser import isoparse
-from pandas._libs.tslibs.timestamps import Timestamp
+from pandas import Timestamp
 
 ISO8601_REGEX = r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}"
 
@@ -108,7 +108,7 @@ def xarray_to_datacube(data):
     return cube
 
 
-def isostr_to_datetime(dt, fail_on_error=True):
+def isostr_to_datetime(dt: str, fail_on_error=True) -> Union[datetime, str]:
     if not fail_on_error:
         try:
             return isostr_to_datetime(dt)
@@ -118,7 +118,7 @@ def isostr_to_datetime(dt, fail_on_error=True):
         if re.match(ISO8601_REGEX, dt):
             return isoparse(dt)
         else:
-            raise Exception(
+            raise ValueError(
                 "Datetime is not in ISO format (YYYY-MM-DDThh:mm:ss plus timezone))"
             )
 
