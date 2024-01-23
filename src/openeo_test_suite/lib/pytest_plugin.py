@@ -8,6 +8,7 @@ from openeo_test_suite.lib.backend_under_test import (
     get_backend_url,
     set_backend_under_test,
 )
+from openeo_test_suite.lib.process_selection import set_process_selection_from_config
 
 
 def pytest_addoption(parser):
@@ -65,3 +66,5 @@ def pytest_configure(config):
         connection = openeo.connect(url=backend_url, auto_validate=False)
         backend = HttpBackend(connection=connection)
     set_backend_under_test(backend)
+
+    set_process_selection_from_config(config)

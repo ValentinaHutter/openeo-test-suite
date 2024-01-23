@@ -12,7 +12,7 @@ from deepdiff import DeepDiff
 
 from openeo_test_suite.lib.process_runner.base import ProcessTestRunner
 from openeo_test_suite.lib.process_runner.util import isostr_to_datetime
-from openeo_test_suite.lib.process_registry import ProcessRegistry
+from openeo_test_suite.lib.process_selection import get_selected_processes
 
 _log = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ def get_examples() -> List[Tuple[str, dict, Path, str, bool]]:
             test.get("level", process.level),
             test.get("experimental", process.experimental),
         )
-        for process in ProcessRegistry().get_all_processes()
+        for process in get_selected_processes()
         for test in process.tests
     ]
 
@@ -37,9 +37,6 @@ def get_examples() -> List[Tuple[str, dict, Path, str, bool]]:
 )
 def test_process(
     connection,
-    skip_experimental,
-    process_levels,
-    processes,
     process_id,
     example,
     file,
@@ -47,21 +44,8 @@ def test_process(
     experimental,
     skipper,
 ):
-    skipper.skip_if_unmatching_process_level(level)
-    if len(processes) > 0 and process_id not in processes:
-        pytest.skip(
-            f"Skipping process {process_id!r} because it is not in the specified processes"
-        )
-
-    # check whether the process is available
-    skipper.skip_if_unsupported_process([process_id])
-
-    if skip_experimental and experimental:
-        pytest.skip("Skipping experimental process {}".format(id))
-
-    # check whether any additionally required processes are available
-    if "required" in example:
-        skipper.skip_if_unsupported_process(example["required"])
+    # Check whether the process (and additional extra required ones, if any) is supported on the backend
+    skipper.skip_if_unsupported_process([process_id] + example.get("required", []))
 
     # prepare the arguments from test JSON encoding to internal backend representations
     # or skip if not supported by the test runner
