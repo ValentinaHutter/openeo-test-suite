@@ -2,6 +2,7 @@
 
 import logging
 import math
+import warnings
 from pathlib import Path
 from typing import List, Tuple, Union
 
@@ -284,9 +285,7 @@ def check_exception(example, result):
         # todo: we should assert here and remove the warning, but right now tooling doesn't really implement this
         # assert result.__class__.__name__ == example["throws"]
         if result.__class__.__name__ != example["throws"]:
-            _log.warning(
-                f"Expected exception {example['throws']} but got {result.__class__}"
-            )
+            warnings.warn(f"Expected exception {example['throws']} but got {result!r}")
 
 
 def check_return_value(example, result, connection, file):
