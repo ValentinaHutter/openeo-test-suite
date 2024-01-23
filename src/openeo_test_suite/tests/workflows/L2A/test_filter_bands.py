@@ -12,12 +12,12 @@ def test_filter_bands(
     tmp_path,
 ):
     skipper.skip_if_no_netcdf_support()
-    skipper.skip_if_unmatching_process_level(level=LEVEL)
 
     filename = tmp_path / "test_filter_bbox.nc"
     b_dim = collection_dims["b_dim"]
 
     cube = cube_one_day_red_nir.filter_bands(["B08"])
+    skipper.skip_if_unselected_process(cube)
     cube.download(filename)
 
     assert filename.exists()

@@ -21,7 +21,6 @@ def test_apply_dimension_quantiles_0(
     number of labels will be equal to the number of values computed by the process.
     """
     skipper.skip_if_no_netcdf_support()
-    skipper.skip_if_unmatching_process_level(level=LEVEL)
 
     filename = tmp_path / "test_apply_dimension_quantiles_0.nc"
     b_dim = collection_dims["b_dim"]
@@ -33,7 +32,7 @@ def test_apply_dimension_quantiles_0(
         process=lambda d: quantiles(d, probabilities=[0.5, 0.75]),
         dimension=b_dim,
     )
-
+    skipper.skip_if_unselected_process(cube)
     cube.download(filename)
     assert filename.exists()
     data = load_netcdf_dataarray(filename, band_dim_name=b_dim)
@@ -54,7 +53,6 @@ def test_apply_dimension_quantiles_1(
     tmp_path,
 ):
     skipper.skip_if_no_netcdf_support()
-    skipper.skip_if_unmatching_process_level(level=LEVEL)
 
     filename = tmp_path / "test_apply_dimension_quantiles_1.nc"
     b_dim = collection_dims["b_dim"]
@@ -67,7 +65,7 @@ def test_apply_dimension_quantiles_1(
         dimension=t_dim,
         target_dimension=b_dim,
     )
-    print(filename)
+    skipper.skip_if_unselected_process(cube)
     cube.download(filename)
     assert filename.exists()
     data = load_netcdf_dataarray(filename, band_dim_name=b_dim)
@@ -90,7 +88,6 @@ def test_apply_dimension_ndvi(
     tmp_path,
 ):
     skipper.skip_if_no_netcdf_support()
-    skipper.skip_if_unmatching_process_level(level=LEVEL)
 
     filename = tmp_path / "test_apply_dimension_ndvi.nc"
     b_dim = collection_dims["b_dim"]
@@ -104,6 +101,7 @@ def test_apply_dimension_ndvi(
         return array_concat(data, ndvi)
 
     ndvi = cube_one_day_red_nir.apply_dimension(dimension=b_dim, process=compute_ndvi)
+    skipper.skip_if_unselected_process(ndvi)
     ndvi.download(filename)
 
     assert filename.exists()

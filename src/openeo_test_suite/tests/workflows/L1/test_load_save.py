@@ -19,7 +19,6 @@ def test_load_save_netcdf(
     tmp_path,
 ):
     skipper.skip_if_no_netcdf_support()
-    skipper.skip_if_unmatching_process_level(level=LEVEL)
 
     filename = tmp_path / "test_load_save_netcdf.nc"
     b_dim = collection_dims["b_dim"]
@@ -27,6 +26,7 @@ def test_load_save_netcdf(
     y_dim = collection_dims["y_dim"]
     t_dim = collection_dims["t_dim"]
 
+    skipper.skip_if_unselected_process(cube_red_nir)
     cube_red_nir.download(filename)
 
     assert filename.exists()
@@ -64,6 +64,7 @@ def test_load_save_10x10_netcdf(
     y_dim = collection_dims["y_dim"]
     t_dim = collection_dims["t_dim"]
 
+    skipper.skip_if_unselected_process(cube_red_10x10)
     cube_red_10x10.download(filename)
 
     assert filename.exists()
@@ -105,6 +106,7 @@ def test_load_save_geotiff(
     y_dim = collection_dims["y_dim"]
     t_dim = collection_dims["t_dim"]
 
+    skipper.skip_if_unselected_process(cube_one_day_red)
     cube_one_day_red.download(filename)
 
     assert filename.exists()

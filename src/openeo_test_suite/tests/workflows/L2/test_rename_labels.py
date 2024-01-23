@@ -10,7 +10,6 @@ def test_rename_labels_bands(
     tmp_path,
 ):
     skipper.skip_if_no_netcdf_support()
-    skipper.skip_if_unmatching_process_level(level=LEVEL)
 
     filename = tmp_path / "test_rename_labels_bands.nc"
     b_dim = collection_dims["b_dim"]
@@ -18,6 +17,7 @@ def test_rename_labels_bands(
     renamed_cube = cube_one_day_red_nir.rename_labels(
         dimension=b_dim, source=["B04", "B08"], target=["red", "nir"]
     )
+    skipper.skip_if_unselected_process(renamed_cube)
     renamed_cube.download(filename)
 
     assert filename.exists()
@@ -36,7 +36,6 @@ def test_rename_labels_time(
     tmp_path,
 ):
     skipper.skip_if_no_netcdf_support()
-    skipper.skip_if_unmatching_process_level(level=LEVEL)
 
     filename = tmp_path / "test_rename_labels_time.nc"
     t_dim = collection_dims["t_dim"]
@@ -46,6 +45,7 @@ def test_rename_labels_time(
     renamed_cube = cube_one_day_red_nir.rename_labels(
         dimension=t_dim, source=t_labels, target=["first_date"]
     )
+    skipper.skip_if_unselected_process(renamed_cube)
     renamed_cube.download(filename)
 
     assert filename.exists()

@@ -10,7 +10,6 @@ def test_reduce_time_merge(
     tmp_path,
 ):
     skipper.skip_if_no_netcdf_support()
-    skipper.skip_if_unmatching_process_level(level=LEVEL)
 
     filename = tmp_path / "test_reduce_time_merge.nc"
     b_dim = collection_dims["b_dim"]
@@ -20,6 +19,7 @@ def test_reduce_time_merge(
     cube_1 = cube_red_nir.reduce_dimension(dimension=t_dim, reducer="median")
 
     cube_merged = cube_0.merge_cubes(cube_1, overlap_resolver="subtract")
+    skipper.skip_if_unselected_process(cube_merged)
     cube_merged.download(filename)
 
     assert filename.exists()
