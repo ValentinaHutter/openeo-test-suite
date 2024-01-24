@@ -1,6 +1,7 @@
 import argparse
 
 import openeo
+import pytest
 
 from openeo_test_suite.lib.backend_under_test import (
     HttpBackend,
@@ -11,9 +12,11 @@ from openeo_test_suite.lib.backend_under_test import (
 from openeo_test_suite.lib.process_selection import set_process_selection_from_config
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: pytest.Parser):
     """Implementation of `pytest_addoption` hook."""
-    parser.addoption(
+    group = parser.getgroup("openeo-test-suite", "openEO test suite options")
+
+    group.addoption(
         "-U",
         "--openeo-backend-url",
         action="store",
@@ -21,7 +24,7 @@ def pytest_addoption(parser):
         help="The openEO backend URL to connect to.",
     )
 
-    parser.addoption(
+    group.addoption(
         "--process-levels",
         action="store",
         default="",
@@ -29,7 +32,7 @@ def pytest_addoption(parser):
         "the openEO process profiles/levels you want to test against, e.g. 'L1,L2,L2A'. "
         "Can be used in combination with `--processes`, in which case the union of both selections will be taken. ",
     )
-    parser.addoption(
+    group.addoption(
         "--processes",
         action="store",
         default="",
@@ -38,7 +41,7 @@ def pytest_addoption(parser):
         "Can be used in combination with `--process-levels`, in which case the union of both selections will be taken.",
     )
 
-    parser.addoption(
+    group.addoption(
         "--experimental",
         type=bool,
         action=argparse.BooleanOptionalAction,
@@ -48,14 +51,14 @@ def pytest_addoption(parser):
         "By default, experimental processes are ignored.",
     )
 
-    parser.addoption(
+    group.addoption(
         "--runner",
         action="store",
         default="skip",
         help="A specific test runner to use for individual process tests. If not provided, uses a default HTTP API runner.",
     )
 
-    parser.addoption(
+    group.addoption(
         "--s2-collection",
         action="store",
         default=None,
@@ -63,7 +66,7 @@ def pytest_addoption(parser):
     )
 
 
-def pytest_configure(config):
+def pytest_configure(config: pytest.Config):
     """Implementation of `pytest_configure` hook."""
     backend_url = get_backend_url(config)
     if backend_url is None:
