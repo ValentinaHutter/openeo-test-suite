@@ -113,8 +113,12 @@ process selection options:
   - Example: `--process-levels=L1,L2`.`
   - A level does not imply other levels, so each desired level must be specified explicitly.
     For example, L2 does **not** include L1 automatically.
-- `--experimental`: Enables tests for experimental processes.
-  By default experimental processes will be skipped.
+
+If neither `--processes` nor `--process-levels` are specified, all processes are considered.
+If both are specified, the union of both will be considered.
+
+- `--experimental`: By default, experimental processes (or experimental process tests) are ignored.
+  Enabling this option will consider experimental processes and tests.
 
 
 ### Runner for individual process testing
