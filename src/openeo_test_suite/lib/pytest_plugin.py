@@ -1,7 +1,10 @@
 import argparse
+import shlex
+import sys
 
 import openeo
 import pytest
+import pytest_metadata.plugin
 
 from openeo_test_suite.lib.backend_under_test import (
     HttpBackend,
@@ -77,3 +80,25 @@ def pytest_configure(config: pytest.Config):
     set_backend_under_test(backend)
 
     set_process_selection_from_config(config)
+
+    # Add invocation info to HTML report
+    # https://pytest-html.readthedocs.io/en/latest/user_guide.html#environment
+    config.stash[pytest_metadata.plugin.metadata_key]["Invocation"] = _invocation()
+
+
+def _invocation() -> str:
+    """CLI invocation options as properly shell-escaped string."""
+    return shlex.join(sys.argv[1:])
+
+
+def pytest_report_header(config: pytest.Config):
+    """Implementation of `pytest_report_header` hook."""
+    return [
+        # Add invocation info to terminal report
+        f"Invoked with: {_invocation()}"
+    ]
+
+
+def pytest_html_report_title(report):
+    """Implementation of `pytest_html_report_title` hook (from pytest-html plugin)."""
+    report.title = "openEO Test Suite Report"
