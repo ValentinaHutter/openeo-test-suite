@@ -3,8 +3,6 @@ import numpy as np
 from openeo_test_suite.lib.workflows.io import load_netcdf_dataarray
 from openeo_test_suite.lib.workflows.parameters import bounding_box_32632_10x10
 
-LEVEL = "L2"
-
 
 def test_filter_bbox(
     skipper,

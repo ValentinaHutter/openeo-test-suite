@@ -2,8 +2,6 @@ import numpy as np
 
 from openeo_test_suite.lib.workflows.io import load_netcdf_dataarray
 
-LEVEL = "L2A"
-
 
 def test_filter_bands(
     skipper,

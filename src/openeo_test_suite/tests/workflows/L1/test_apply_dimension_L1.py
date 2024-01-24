@@ -2,8 +2,6 @@ import numpy as np
 
 from openeo_test_suite.lib.workflows.io import load_netcdf_dataarray
 
-LEVEL = "L1"
-
 
 def test_apply_dimension_quantiles_0(
     skipper,

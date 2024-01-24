@@ -9,8 +9,6 @@ from openeo_test_suite.lib.workflows.parameters import (
     bounding_box_32632_10x10,
 )
 
-LEVEL = "L1"
-
 
 def test_load_save_netcdf(
     skipper,

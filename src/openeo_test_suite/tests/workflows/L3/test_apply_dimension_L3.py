@@ -1,7 +1,5 @@
 from openeo_test_suite.lib.workflows.io import load_netcdf_dataarray
 
-LEVEL = "L3"
-
 
 def test_apply_dimension_order(
     skipper,

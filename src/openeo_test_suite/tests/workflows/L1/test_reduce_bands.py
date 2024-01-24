@@ -1,7 +1,5 @@
 from openeo_test_suite.lib.workflows.io import load_netcdf_dataarray
 
-LEVEL = "L1"
-
 
 def test_ndvi_index(
     skipper,
