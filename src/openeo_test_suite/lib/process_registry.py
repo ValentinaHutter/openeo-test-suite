@@ -104,6 +104,7 @@ class ProcessRegistry:
             level = process_data.level
 
             if process_data.experimental and not experimental:
+                _log.debug(f"Skipping process {pid!r}: experimental")
                 continue
 
             if process_ids and pid in process_ids:
@@ -113,3 +114,7 @@ class ProcessRegistry:
             elif not process_ids and not process_levels:
                 # No id or level allow lists: no filtering
                 yield process_data
+            else:
+                _log.debug(
+                    f"Skipping process {pid!r}: not in allow lists {process_levels=} or {process_ids=}"
+                )
