@@ -57,7 +57,7 @@ focussing on a specific API aspect to test or verify
     Note that this invocation will not actually execute anything,
     see the [runner info](#individual-process-testing-runner)
     and the [more extensive usage examples](#individual-process-testing-examples) for more information and functional examples.
-- **WP6 Full process graph execution** (lead implementation partner: EURAC)
+- **WP6 Full process graph execution and validation** (lead implementation partner: EURAC)
   - Main location: [`src/openeo_test_suite/tests/workflows`](./src/openeo_test_suite/tests/workflows)
   - Provides tests to run full processes graphs and evaluate the results.
   - Usage example of just running these tests against a desired openEO backend URL:
@@ -212,7 +212,7 @@ with currently one of the following options:
   - Only covers a subset of processes due to the underlying architecture of the back-end implementation.
     In particular, it only covers the pure Python code paths, but not the PySpark related aspects.
 
-See [openeo_test_suite/lib/process_runner](https://github.com/Open-EO/openeo-test-suite/tree/main/src/openeo_test_suite/lib/process_runner)
+See [openeo_test_suite/lib/process_runner](./src/openeo_test_suite/lib/process_runner)
 for more details about these runners and inspiration to implement your own runner.
 
 
@@ -287,6 +287,31 @@ Support for it is built-in in `pytest` through the `--junit-xml` option:
 
     pytest --junit-xml=reports/report.xml
 
+
+## Extending the test suite and adding new tests
+
+How to extend the test suite depends largely on the module or aspect you want to extend.
+Some general guidelines:
+
+- General test suite framework: add new functionality or extend existing utilities
+  `src/openeo_test_suite/lib`. Preferably also add "internal" tests,
+  which should be able to run without the presence of a real openEO backend.
+- Validation of collection metadata:
+  extend existing tests or add new tests at `src/openeo_test_suite/tests/collections`.
+- Validation of process metadata:
+  add new tests to `src/openeo_test_suite/tests/processes/metadata`.
+  - TODO: [Open-EO/openeo-test-suite#19](https://github.com/Open-EO/openeo-test-suite/issues/19)
+- General openEO API compliance validation:
+  - TODO: [Open-EO/openeo-test-suite#20](https://github.com/Open-EO/openeo-test-suite/issues/20)
+- Individual process testing:
+  - new input-output pairs for existing or new processes:
+    add them in the [openeo-processes](https://github.com/Open-EO/openeo-processes) project
+    or under [Open-EO/openeo-processes#468](https://github.com/Open-EO/openeo-processes/pull/468)
+  - extend functionality (e.g. process runners, data conversion aspects, ...):
+    see [openeo_test_suite/lib/process_runner](./src/openeo_test_suite/lib/process_runner)
+- Full process graph execution and validation:
+  add new tests to `src/openeo_test_suite/tests/workflows`,
+  use existing tests there as inspiration on how to write new tests.
 
 
 ## Development and contributions
