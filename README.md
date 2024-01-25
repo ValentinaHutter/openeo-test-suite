@@ -56,6 +56,26 @@ which makes sure that code changes will be reflected immediately in your virtual
 without the need of (re)installing the project.
 
 
+#### Additional dependencies related to runners for individual process testing
+
+The individual process testing module of the test suite allows to pick
+a specific process "runner" (see further for more documentation).
+Some of these runners require additional optional dependencies to be installed in your virtual environment,
+which can be done by providing an appropriate "extra" identifier in the `pip install` command:
+
+- For the "dask" runner:
+    ```bash
+    pip install -e .[dask]
+    ```
+- For the "vito" runner:
+    ```bash
+    pip install -e .[vito] --extra-index-url https://artifactory.vgt.vito.be/api/pypi/python-openeo/simple
+    ```
+
+Note that it might be not possible to install both "dask" and "vito" extras
+in the same environment because of conflicting dependency constraints.
+
+
 ## Running the test suite
 
 The test suite at least requires an openEO backend URL to run against.
@@ -124,10 +144,12 @@ with currently one of the following options:
     These tests will be marked as skipped.
 - `dask`: Executes the tests directly via the [openEO Dask implementation](https://github.com/Open-EO/openeo-processes-dask) (as used by EODC, EURAC, and others)
   - Requires [openeo_processes_dask](https://github.com/Open-EO/openeo-processes-dask) package being installed in test environment.
+    See installation instructions above for more practical info.
   - Covers all implemented processes.
 - `vito`: Executes the tests directly via the
   [openEO Python Driver implementation](https://github.com/Open-EO/openeo-python-driver) (as used by CDSE, VITO/Terrascope, and others).
   - Requires [openeo_driver](https://github.com/Open-EO/openeo-python-driver) package being installed in test environment.
+    See installation instructions above for more practical info.
   - Only covers a subset of processes due to the underlying architecture of the back-end implementation.
     In particular, it only covers the pure Python code paths, but not the PySpark related aspects.
 
