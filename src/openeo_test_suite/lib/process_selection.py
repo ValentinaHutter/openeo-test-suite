@@ -1,3 +1,4 @@
+import functools
 import logging
 from dataclasses import dataclass
 from typing import Iterable, List, Optional, Union
@@ -39,6 +40,8 @@ def set_process_selection_from_config(config: pytest.Config):
     )
 
 
+# TODO: more structural/testable solution for get_selected_processes related caching?
+@functools.lru_cache()
 def get_selected_processes() -> Iterable[ProcessData]:
     """
     Get effective list of processes extracted from the process registry
