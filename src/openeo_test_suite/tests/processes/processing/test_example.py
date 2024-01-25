@@ -10,50 +10,26 @@ import json5
 import pytest
 from deepdiff import DeepDiff
 
-import openeo_test_suite
 from openeo_test_suite.lib.process_runner.base import ProcessTestRunner
 from openeo_test_suite.lib.process_runner.util import isostr_to_datetime
+from openeo_test_suite.lib.process_selection import get_selected_processes
 
 _log = logging.getLogger(__name__)
 
 
-DEFAULT_EXAMPLES_ROOT = (
-    Path(openeo_test_suite.__file__).parents[2] / "assets/processes/tests"
-)
-
-
-def _get_prop(prop: str, data: dict, test: dict, *, default=None):
-    """Get property from example data, first trying test data, then full process data, then general fallback value."""
-    # TODO make this function more generic (e.g. `multidict_get(key, *dicts, default=None)`)
-    if prop in test:
-        level = test[prop]
-    elif prop in data:
-        level = data[prop]
-    else:
-        level = default
-    return level
-
-
-def get_examples(
-    root: Union[str, Path] = DEFAULT_EXAMPLES_ROOT
-) -> List[Tuple[str, dict, Path, str, bool]]:
+def get_examples() -> List[Tuple[str, dict, Path, str, bool]]:
     """Collect process examples/tests from examples root folder containing JSON5 files."""
-    # TODO return a list of NamedTuples?
-    examples = []
-    # TODO: it's not recommended use `file` (a built-in) as variable name. `path` would be better.
-    for file in root.glob("*.json5"):
-        process_id = file.stem
-        try:
-            with file.open() as f:
-                data = json5.load(f)
-            for test in data["tests"]:
-                level = _get_prop("level", data, test, default="L4")
-                experimental = _get_prop("experimental", data, test, default=False)
-                examples.append((process_id, test, file, level, experimental))
-        except Exception as e:
-            _log.warning(f"Failed to load {file}: {e}")
-
-    return examples
+    return [
+        (
+            process.process_id,
+            test,
+            process.path,
+            test.get("level", process.level),
+            test.get("experimental", process.experimental),
+        )
+        for process in get_selected_processes()
+        for test in process.tests
+    ]
 
 
 @pytest.mark.parametrize(
@@ -61,9 +37,6 @@ def get_examples(
 )
 def test_process(
     connection,
-    skip_experimental,
-    process_levels,
-    processes,
     process_id,
     example,
     file,
@@ -71,21 +44,8 @@ def test_process(
     experimental,
     skipper,
 ):
-    skipper.skip_if_unmatching_process_level(level)
-    if len(processes) > 0 and process_id not in processes:
-        pytest.skip(
-            f"Skipping process {process_id!r} because it is not in the specified processes"
-        )
-
-    # check whether the process is available
-    skipper.skip_if_unsupported_process([process_id])
-
-    if skip_experimental and experimental:
-        pytest.skip("Skipping experimental process {}".format(id))
-
-    # check whether any additionally required processes are available
-    if "required" in example:
-        skipper.skip_if_unsupported_process(example["required"])
+    # Check whether the process (and additional extra required ones, if any) is supported on the backend
+    skipper.skip_if_unsupported_process([process_id] + example.get("required", []))
 
     # prepare the arguments from test JSON encoding to internal backend representations
     # or skip if not supported by the test runner

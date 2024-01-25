@@ -1,7 +1,5 @@
 from openeo_test_suite.lib.workflows.io import load_netcdf_dataarray
 
-LEVEL = "L1"
-
 
 def test_ndvi_index(
     skipper,
@@ -10,7 +8,6 @@ def test_ndvi_index(
     tmp_path,
 ):
     skipper.skip_if_no_netcdf_support()
-    skipper.skip_if_unmatching_process_level(level=LEVEL)
 
     filename = tmp_path / "test_ndvi_index.nc"
     b_dim = collection_dims["b_dim"]
@@ -23,6 +20,7 @@ def test_ndvi_index(
         return (nir - red) / (nir + red)
 
     ndvi = cube_one_day_red_nir.reduce_dimension(dimension=b_dim, reducer=compute_ndvi)
+    skipper.skip_if_unselected_process(ndvi)
     ndvi.download(filename)
 
     assert filename.exists()
@@ -49,6 +47,7 @@ def test_ndvi_label(
         return (nir - red) / (nir + red)
 
     ndvi = cube_one_day_red_nir.reduce_dimension(dimension=b_dim, reducer=compute_ndvi)
+    skipper.skip_if_unselected_process(ndvi)
     ndvi.download(filename)
 
     assert filename.exists()

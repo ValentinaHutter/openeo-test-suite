@@ -1,7 +1,5 @@
 from openeo_test_suite.lib.workflows.io import load_netcdf_dataarray
 
-LEVEL = "L1"
-
 
 def test_reduce_time(
     skipper,
@@ -10,13 +8,13 @@ def test_reduce_time(
     tmp_path,
 ):
     skipper.skip_if_no_netcdf_support()
-    skipper.skip_if_unmatching_process_level(level=LEVEL)
 
     filename = tmp_path / "test_reduce_time.nc"
     b_dim = collection_dims["b_dim"]
     t_dim = collection_dims["t_dim"]
 
     cube = cube_red_nir.reduce_dimension(dimension=t_dim, reducer="mean")
+    skipper.skip_if_unselected_process(cube)
     cube.download(filename)
 
     assert filename.exists()

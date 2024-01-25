@@ -1,7 +1,5 @@
 from openeo_test_suite.lib.workflows.io import load_netcdf_dataarray
 
-LEVEL = "L2"
-
 
 def test_drop_dimension_time(
     skipper,
@@ -10,13 +8,13 @@ def test_drop_dimension_time(
     tmp_path,
 ):
     skipper.skip_if_no_netcdf_support()
-    skipper.skip_if_unmatching_process_level(level=LEVEL)
 
     filename = tmp_path / "test_drop_dimension_time.nc"
     t_dim = collection_dims["t_dim"]
     b_dim = collection_dims["b_dim"]
 
     cube = cube_red_10x10.drop_dimension(name=t_dim)
+    skipper.skip_if_unselected_process(cube)
     cube.download(filename)
 
     assert filename.exists()

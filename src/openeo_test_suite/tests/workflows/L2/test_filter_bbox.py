@@ -3,8 +3,6 @@ import numpy as np
 from openeo_test_suite.lib.workflows.io import load_netcdf_dataarray
 from openeo_test_suite.lib.workflows.parameters import bounding_box_32632_10x10
 
-LEVEL = "L2"
-
 
 def test_filter_bbox(
     skipper,
@@ -13,7 +11,6 @@ def test_filter_bbox(
     tmp_path,
 ):
     skipper.skip_if_no_netcdf_support()
-    skipper.skip_if_unmatching_process_level(level=LEVEL)
 
     filename = tmp_path / "test_filter_bbox.nc"
     b_dim = collection_dims["b_dim"]
@@ -22,6 +19,7 @@ def test_filter_bbox(
     t_dim = collection_dims["t_dim"]
 
     cube = cube_one_day_red.filter_bbox(bounding_box_32632_10x10)
+    skipper.skip_if_unselected_process(cube)
     cube.download(filename)
 
     assert filename.exists()

@@ -1,8 +1,6 @@
 from openeo_test_suite.lib.workflows.io import load_netcdf_dataarray
 from openeo_test_suite.lib.workflows.parameters import temporal_interval_one_day
 
-LEVEL = "L2"
-
 
 def test_filter_temporal(
     skipper,
@@ -11,13 +9,13 @@ def test_filter_temporal(
     tmp_path,
 ):
     skipper.skip_if_no_netcdf_support()
-    skipper.skip_if_unmatching_process_level(level=LEVEL)
 
     filename = tmp_path / "test_filter_temporal.nc"
     t_dim = collection_dims["t_dim"]
     b_dim = collection_dims["b_dim"]
 
     cube = cube_red_nir.filter_temporal(temporal_interval_one_day)
+    skipper.skip_if_unselected_process(cube)
     cube.download(filename)
 
     assert filename.exists()

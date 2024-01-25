@@ -8,47 +8,10 @@ import openeo
 import pytest
 
 from openeo_test_suite.lib.backend_under_test import get_backend_url
+from openeo_test_suite.lib.process_selection import get_selected_processes
 from openeo_test_suite.lib.skipping import Skipper
 
 _log = logging.getLogger(__name__)
-
-
-@pytest.fixture(scope="session")
-def skip_experimental(request) -> bool:
-    """
-    Fixture to determine whether experimental functionality should be tested or not.
-    """
-    skip = not request.config.getoption("--experimental")
-    _log.info(f"Skip experimental functionality {skip=}")
-    return skip
-
-
-@pytest.fixture(scope="session")
-def process_levels(request) -> List[str]:
-    """
-    Fixture to get the desired openEO profiles levels.
-    """
-    levels_str = request.config.getoption("--process-levels")
-
-    if isinstance(levels_str, str) and len(levels_str) > 0:
-        _log.info(f"Testing process levels {levels_str!r}")
-        return list(map(lambda l: l.strip(), levels_str.split(",")))
-    else:
-        return []
-
-
-@pytest.fixture(scope="session")
-def processes(request) -> List[str]:
-    """
-    Fixture to get the desired processes to test against.
-    """
-    processes_str = request.config.getoption("--processes")
-
-    if isinstance(processes_str, str) and len(processes_str) > 0:
-        _log.info(f"Testing processes {processes_str!r}")
-        return list(map(lambda p: p.strip(), processes_str.split(",")))
-    else:
-        return []
 
 
 @pytest.fixture(scope="module")
@@ -61,7 +24,9 @@ def auto_authenticate() -> bool:
 
 
 @pytest.fixture(scope="module")
-def connection(request, auto_authenticate: bool, pytestconfig) -> openeo.Connection:
+def connection(
+    request, auto_authenticate: bool, pytestconfig: pytest.Config
+) -> openeo.Connection:
     backend_url = get_backend_url(request.config, required=True)
     con = openeo.connect(backend_url, auto_validate=False)
 
@@ -91,5 +56,8 @@ def connection(request, auto_authenticate: bool, pytestconfig) -> openeo.Connect
 
 
 @pytest.fixture
-def skipper(connection, process_levels) -> Skipper:
-    return Skipper(connection=connection, process_levels=process_levels)
+def skipper(connection) -> Skipper:
+    return Skipper(
+        connection=connection,
+        selected_processes=[p.process_id for p in get_selected_processes()],
+    )
