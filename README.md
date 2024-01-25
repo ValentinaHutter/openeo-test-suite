@@ -86,11 +86,6 @@ It can be specified through a `pytest` command line option
     # Or using the short form `-U` (at the cost of being less descriptive):
     pytest -U openeo.example
 
-or through an environment variable `OPENEO_BACKEND_URL`
-
-    export OPENEO_BACKEND_URL=openeo.example
-    pytest
-
 If no explicit protocol is specified, `https://` will be assumed automatically.
 
 
