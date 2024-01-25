@@ -66,7 +66,10 @@ class ProcessRegistry:
             try:
                 with path.open() as f:
                     data = json5.load(f)
-                assert data["id"] == path.stem
+                if data["id"] != path.stem:
+                    raise ValueError(
+                        f"Process id mismatch between id {data['id']!r} and filename {path.name!r}"
+                    )
                 yield ProcessData(
                     process_id=data["id"],
                     level=data.get("level"),
