@@ -162,6 +162,9 @@ process selection options:
 
 - `--processes` to define a comma-separated list of processes to test against.
   - Example: `--processes=min,load_stac,apply,reduce_dimension`.
+  - Note that processes specified with this option are always selected,
+    irrespective of their "experimental" status
+    and the presence of the `--experimental` option discussed below.
 - `--process-levels` to select whole groups of processes based on
   predefined [process profiles](https://openeo.org/documentation/1.0/developers/profiles/processes.html),
   specified as a comma-separated list of levels.
@@ -174,6 +177,8 @@ If both are specified, the union of both will be considered.
 
 - `--experimental`: By default, experimental processes (or experimental process tests) are ignored.
   Enabling this option will consider experimental processes and tests.
+  Note that experimental processes explicitly selected with `--processes` will be
+  kept irrespective of this option.
 
 
 ### Runner for individual process testing <a name="individual-process-testing-runner"></a>

@@ -103,18 +103,27 @@ class ProcessRegistry:
             pid = process_data.process_id
             level = process_data.level
 
-            if process_data.experimental and not experimental:
-                _log.debug(f"Skipping process {pid!r}: experimental")
-                continue
-
             if process_ids and pid in process_ids:
                 yield process_data
             elif process_levels and level in process_levels:
+                if process_data.experimental and not experimental:
+                    _log.debug(f"Skipping process {pid!r}: experimental")
+                    continue
                 yield process_data
             elif not process_ids and not process_levels:
-                # No id or level allow lists: no filtering
+                # No id or level allow lists: no filtering (except experimental flag)
+                if process_data.experimental and not experimental:
+                    _log.debug(f"Skipping process {pid!r}: experimental")
+                    continue
+
                 yield process_data
             else:
                 _log.debug(
                     f"Skipping process {pid!r}: not in allow lists {process_levels=} or {process_ids=}"
                 )
+
+    def get_process(self, process_id: str) -> ProcessData:
+        for process_data in self.get_all_processes():
+            if process_data.process_id == process_id:
+                return process_data
+        raise LookupError(f"Process not found: {process_id!r}")
