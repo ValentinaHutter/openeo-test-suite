@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "openeo_test_suite"
-version = "0.0.1"
+version = "0.1.0"
 description = "Test suite for validation of openEO back-ends against the openEO API specification."
 readme = "README.md"
 requires-python = ">=3.9"
