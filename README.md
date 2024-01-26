@@ -161,7 +161,7 @@ It is possible to only run tests for a subset of processes with these
 process selection options:
 
 - `--processes` to define a comma-separated list of processes to test against.
-  - Example: `--processes=min,load_stac_,apply,reduce_dimension`.
+  - Example: `--processes=min,load_stac,apply,reduce_dimension`.
 - `--process-levels` to select whole groups of processes based on
   predefined [process profiles](https://openeo.org/documentation/1.0/developers/profiles/processes.html),
   specified as a comma-separated list of levels.
