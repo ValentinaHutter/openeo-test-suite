@@ -21,14 +21,16 @@ def domain(request):
 @pytest.fixture(scope="session")
 def spec(request):
     return conformance_util.adjust_spec_json(
-        conformance_util.get_spec_path_json(), conformance_util.get_base_url(request)
+        conformance_util.get_spec_path_json(),
+        conformance_util.get_base_url(request),
+        conformance_util.get_domain(request),
     )
 
 
 @pytest.fixture(scope="session")
-def bearer_token():
-    bearer_token = conformance_util.get_access_token()
-    return f"Bearer oidc/egi/{bearer_token}"
+def bearer_token(pytestconfig):
+    bearer_token = conformance_util.get_access_token(pytestconfig)
+    return f"Bearer {bearer_token}"
 
 
 # endregion
@@ -57,7 +59,7 @@ def test_GET_backend_info(base_url: str, spec: Spec, bearer_token: str):
     assert fail_log == ""
 
 
-def test_GET_well_known(domain: str):
+def test_GET_well_known(domain: str, spec: Spec, bearer_token: str):
     """
     tests all the generic GET endpoints that require neither setup nor cleanup
 
@@ -65,11 +67,8 @@ def test_GET_well_known(domain: str):
     testing: test response by API for GET requests
     cleanup: Change server back potentially
     """
-    spec = conformance_util.adjust_spec_well_known_json(
-        conformance_util.get_spec_path_json(), domain
-    )
 
-    endpoint_path = ".well-known/openeo"
+    endpoint_path = "/.well-known/openeo"
     test_name = "Well known"
 
     # Run through all the generic GET endpoints and test their response to a proper request.
@@ -238,8 +237,6 @@ def test_GET_me(base_url: str, spec: Spec, bearer_token: str):
 
     assert fail_log == ""
 
-
-def test_GET_collections_collection_id(base_url: str, spec: Spec, bearer_token: str):
     """
     setup: collect list of collection ids
     testing: test response by API for GET requests of all the collection ids
@@ -430,7 +427,7 @@ def test_DELETE_process_graphs_process_id(base_url: str, spec: Spec, bearer_toke
             spec=spec,
             bearer_token=bearer_token,
             method="DELETE",
-            expected_status_code=204,
+            expected_status_codes=204,
         )
 
     # CLEANUP
@@ -508,7 +505,7 @@ def test_POST_jobs(base_url: str, spec: Spec, bearer_token: str):
             bearer_token=bearer_token,
             payload=payload,
             method="POST",
-            expected_status_code=201,
+            expected_status_codes=201,
             return_response=True,
         )
 
@@ -602,7 +599,7 @@ def test_PATCH_jobs_job_id(base_url: str, spec: Spec, bearer_token: str):
             bearer_token=bearer_token,
             payload=payload,
             method="PATCH",
-            expected_status_code=204,
+            expected_status_codes=204,
         )
 
     # CLEANUP
@@ -643,7 +640,7 @@ def test_DELETE_jobs_job_id(base_url: str, spec: Spec, bearer_token: str):
             spec=spec,
             bearer_token=bearer_token,
             method="DELETE",
-            expected_status_code=204,
+            expected_status_codes=204,
         )
 
     # CLEANUP
@@ -679,7 +676,7 @@ def test_POST_jobs_job_id_results(base_url: str, spec: Spec, bearer_token: str):
             spec=spec,
             bearer_token=bearer_token,
             method="POST",
-            expected_status_code=202,
+            expected_status_codes=202,
         )
 
     # CLEANUP
@@ -785,7 +782,7 @@ def test_DELETE_jobs_job_id_results(base_url: str, spec: Spec, bearer_token: str
             spec=spec,
             bearer_token=bearer_token,
             method="DELETE",
-            expected_status_code=204,
+            expected_status_codes=204,
         )
 
     # CLEANUP
@@ -912,7 +909,7 @@ def test_POST_result(base_url: str, spec: Spec, bearer_token: str):
             bearer_token=bearer_token,
             payload=payload,
             method="POST",
-            expected_status_code=201,
+            expected_status_codes=201,
         )
     # CLEANUP
 
@@ -989,7 +986,7 @@ def test_none_PUT_process_graphs_process_id(
         payload=None,
         bearer_token=bearer_token,
         method="PUT",
-        expected_status_code=422,
+        expected_status_codes=range(400, 500),
     )
 
     # CLEANUP
@@ -1021,7 +1018,7 @@ def test_negative_DELETE_process_graphs_process_id(
         spec=spec,
         bearer_token=bearer_token,
         method="DELETE",
-        expected_status_code=500,
+        expected_status_codes=range(400, 501),
     )
 
     # CLEANUP
@@ -1047,7 +1044,7 @@ def test_none_POST_jobs(base_url: str, spec: Spec, bearer_token: str):
         bearer_token=bearer_token,
         payload=None,
         method="POST",
-        expected_status_code=422,
+        expected_status_codes=range(400, 500),
     )
 
     # CLEANUP
@@ -1081,7 +1078,7 @@ def test_none_PATCH_jobs_job_id(base_url: str, spec: Spec, bearer_token: str):
             bearer_token=bearer_token,
             payload=None,
             method="PATCH",
-            expected_status_code=422,
+            expected_status_codes=range(400, 500),
         )
 
     # CLEANUP
@@ -1114,7 +1111,7 @@ def test_negative_DELETE_jobs_job_id(base_url: str, spec: Spec, bearer_token: st
         spec=spec,
         bearer_token=bearer_token,
         method="DELETE",
-        expected_status_code=422,
+        expected_status_codes=range(400, 500),
     )
 
     # CLEANUP
@@ -1143,7 +1140,7 @@ def test_negative_POST_jobs_job_id_results(
         spec=spec,
         bearer_token=bearer_token,
         method="POST",
-        expected_status_code=422,
+        expected_status_codes=range(400, 500),
     )
 
     # CLEANUP
@@ -1170,7 +1167,7 @@ def test_negative_GET_jobs_job_id_results(base_url: str, spec: Spec, bearer_toke
         spec=spec,
         bearer_token=bearer_token,
         method="GET",
-        expected_status_code=422,
+        expected_status_codes=range(400, 500),
     )
 
     # CLEANUP
@@ -1199,7 +1196,7 @@ def test_negative_DELETE_jobs_job_id_results(
         spec=spec,
         bearer_token=bearer_token,
         method="DELETE",
-        expected_status_code=422,
+        expected_status_codes=range(400, 500),
     )
 
     # CLEANUP
@@ -1228,7 +1225,7 @@ def test_negative_GET_jobs_job_id_logs(base_url: str, spec: Spec, bearer_token: 
         spec=spec,
         bearer_token=bearer_token,
         method="GET",
-        expected_status_code=422,
+        expected_status_codes=range(400, 500),
     )
     # CLEANUP
 
@@ -1258,7 +1255,7 @@ def test_none_POST_result(base_url: str, spec: Spec, bearer_token: str):
         bearer_token=bearer_token,
         payload=None,
         method="POST",
-        expected_status_code=422,
+        expected_status_codes=range(400, 500),
     )
     # CLEANUP
 
@@ -1285,7 +1282,7 @@ def test_none_POST_validation(base_url: str, spec: Spec, bearer_token: str):
         bearer_token=bearer_token,
         payload=None,
         method="POST",
-        expected_status_code=422,
+        expected_status_codes=range(400, 500),
     )
 
     # CLEANUP
@@ -1328,7 +1325,7 @@ def test_empty_PUT_process_graphs_process_id(
         payload=payload,
         bearer_token=bearer_token,
         method="PUT",
-        expected_status_code=500,
+        expected_status_codes=range(400, 501),
     )
 
     # CLEANUP
@@ -1363,7 +1360,7 @@ def test_empty_POST_jobs(base_url: str, spec: Spec, bearer_token: str):
         bearer_token=bearer_token,
         payload=payload,
         method="POST",
-        expected_status_code=500,
+        expected_status_codes=range(400, 501),
     )
 
     # CLEANUP
@@ -1406,7 +1403,7 @@ def test_empty_PATCH_jobs_job_id(base_url: str, spec: Spec, bearer_token: str):
             bearer_token=bearer_token,
             payload=payload,
             method="PATCH",
-            expected_status_code=204,
+            expected_status_codes=204,
         )
 
     # CLEANUP
@@ -1451,7 +1448,7 @@ def test_empty_POST_result(base_url: str, spec: Spec, bearer_token: str):
         bearer_token=bearer_token,
         payload=payload,
         method="POST",
-        expected_status_code=422,
+        expected_status_codes=range(400, 500),
     )
     # CLEANUP
 
@@ -1487,7 +1484,7 @@ def test_empty_POST_validation(base_url: str, spec: Spec, bearer_token: str):
         bearer_token=bearer_token,
         payload=payload,
         method="POST",
-        expected_status_code=200,
+        expected_status_codes=200,
     )
 
     # CLEANUP

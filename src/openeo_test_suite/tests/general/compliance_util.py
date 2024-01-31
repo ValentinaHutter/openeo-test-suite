@@ -1,3 +1,4 @@
+from typing import Union
 from openapi_core import Spec
 import yaml
 import json
@@ -6,7 +7,10 @@ import uuid
 import requests
 import time
 
-from openeo_test_suite.lib.backend_under_test import get_backend_url
+from openeo_test_suite.lib.backend_under_test import (
+    get_backend_url,
+    get_backend_under_test,
+)
 
 
 from openapi_core import validate_response
@@ -23,7 +27,7 @@ def test_endpoint(
     payload: dict = None,
     bearer_token: str = None,
     method: str = "GET",
-    expected_status_code: int = 200,
+    expected_status_codes: Union[list[int], int] = [200],
     return_response: bool = False,
 ):
     full_endpoint_url = f"{base_url}{endpoint_path}"
@@ -115,14 +119,14 @@ def test_endpoint(
     openapi_response = RequestsOpenAPIResponse(requests_response)
 
     try:
-        if openapi_response.status_code == expected_status_code:
+        if check_status_code(expected_status_codes, openapi_response.status_code):
             validate_response(
                 openapi_request, openapi_response, spec=spec, cls=V30ResponseValidator
             )
         else:
             raise UnexpectedStatusCodeException(
                 endpoint=full_endpoint_url,
-                expected_status_code=expected_status_code,
+                expected_status_code=expected_status_codes,
                 actual_status_code=openapi_response.status_code,
                 auth=(bearer_token is not None),
             )
@@ -137,6 +141,14 @@ def test_endpoint(
             return "", requests_response
         else:
             return ""
+
+
+def check_status_code(
+    expected_status_codes: Union[list[int], int], actual_status_code: int
+):
+    if isinstance(expected_status_codes, int):
+        return actual_status_code == expected_status_codes
+    return actual_status_code in expected_status_codes
 
 
 class UnexpectedStatusCodeException(Exception):
@@ -271,19 +283,6 @@ def check_test_results(e: Exception):
 
 # THIS IS A WORKAROUND,
 # this can be removed IF the cause of ServerNotFound Exception has been fixed
-def adjust_server_in_yaml(path_to_yaml: str, endpoint: str):
-    with open(path_to_yaml, "r") as file:
-        data = yaml.safe_load(file)
-
-    if "servers" in data and isinstance(data["servers"], list):
-        for server in data["servers"]:
-            if "url" in server and isinstance(server["url"], str):
-                server["url"] = endpoint
-
-    with open(path_to_yaml, "w") as file:
-        yaml.dump(data, file)
-
-
 def adjust_server_in_json(path_to_json, endpoint):
     with open(path_to_json, "r") as file:
         data = json.load(file)
@@ -292,45 +291,19 @@ def adjust_server_in_json(path_to_json, endpoint):
         for server in data["servers"]:
             if "url" in server and isinstance(server["url"], str):
                 server["url"] = endpoint
-
-    with open(path_to_json, "w") as file:
-        json.dump(data, file, indent=4)
+    return data
 
 
-# JSON variant
-def adjust_spec_json(path_to_json: str, endpoint: str):
-    adjust_server_in_json(path_to_json=path_to_json, endpoint=endpoint)
-
-    with open(path_to_json, "r") as file:
-        data = json.load(file)
-        return Spec.from_dict(data, validator=None)
+def adjust_spec_json(path_to_json: str, endpoint: str, domain: str):
+    data = adjust_server_in_json(path_to_json=path_to_json, endpoint=endpoint)
+    data = adjust_server_in_well_known_json(data=data, endpoint=domain)
+    return Spec.from_dict(data, validator=None)
 
 
-def adjust_spec_well_known_json(path_to_json: str, endpoint: str):
-    adjust_server_in_well_known_json(path_to_json=path_to_json, endpoint=endpoint)
-
-    with open(path_to_json, "r") as file:
-        data = json.load(file)
-        return Spec.from_dict(data, validator=None)
-
-
-def adjust_server_in_well_known_json(path_to_json, endpoint):
-    with open(path_to_json, "r") as file:
-        data = json.load(file)
-
+def adjust_server_in_well_known_json(data, endpoint):
     data["paths"]["/.well-known/openeo"]["get"]["servers"][0]["url"] = endpoint
 
-    with open(path_to_json, "w") as file:
-        json.dump(data, file, indent=4)
-
-
-# YAML variant
-def adjust_spec_yaml(path_to_yaml: str, endpoint: str):
-    adjust_server_in_yaml(path_to_yaml=path_to_yaml, endpoint=endpoint)
-
-    with open(path_to_yaml, "r") as file:
-        data = yaml.safe_load(file)
-        return Spec.from_dict(data, validator=None)
+    return data
 
 
 def validate_uri(value):
@@ -352,15 +325,13 @@ extra_format_unmarshallers = {
 
 
 def get_examples_path():
-    return os.path.join(os.getcwd(), "openeo_conformance_test/payload_examples")
+    return os.path.join(
+        os.getcwd(), "src/openeo_test_suite/tests/general/payload_examples"
+    )
 
 
 def get_spec_path_json():
     return os.path.join(os.getcwd(), "src/openeo_test_suite/tests/general/openapi.json")
-
-
-def get_process_list_path():
-    return os.path.join(os.getcwd(), "tests/general/process_list.json")
 
 
 def load_payloads_from_directory(directory_path: str) -> list[dict]:
@@ -478,6 +449,13 @@ def post_start_jobs(base_url: str, bearer_token: str):
         full_endpoint_url = f"{base_url}/{endpoint_path}/{job_id}/{endpoint_path_extra}"
         requests.post(full_endpoint_url, headers={"Authorization": f"{bearer_token}"})
 
+    wait_job_statuses(
+        base_url=base_url,
+        bearer_token=bearer_token,
+        job_ids=created_batch_job_ids,
+        job_statuses=["running"],
+        timeout=60,
+    )
     return created_batch_job_ids
 
 
@@ -490,7 +468,6 @@ def cancel_delete_jobs(base_url: str, bearer_token: str, job_ids: list[str]):
 
     for job_id in job_ids:
         full_endpoint_url = f"{base_url}/{endpoint_path}/{job_id}"
-
         requests.delete(full_endpoint_url, headers={"Authorization": f"{bearer_token}"})
 
 
@@ -509,16 +486,15 @@ def get_process_list(base_url: str):
     return json.loads(requests.get(full_endpoint_url).content)["processes"]
 
 
-def get_access_token():
-    # load_dotenv("..")
-    refresh_token = os.getenv("OIDC_EGI_REFRESH_TOKEN")
-    url = "https://aai.egi.eu/auth/realms/egi/protocol/openid-connect/token"
-    payload = f"grant_type=refresh_token&refresh_token={refresh_token}&client_id=token-portal&scope=openid%20email%20profile%20voperson_id%20eduperson_entitlement"
-    headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    response = requests.post(url, data=payload, headers=headers)
+def get_access_token(pytestconfig):
+    backend = get_backend_under_test()
 
-    if response.status_code == 200:
-        return json.loads(response.content)["access_token"]
+    capmanager = pytestconfig.pluginmanager.getplugin("capturemanager")
+    with capmanager.global_and_fixture_disabled():
+        backend.connection.authenticate_oidc()
+    # load_dotenv("..")
+    if hasattr(backend.connection.auth, "bearer"):
+        return backend.connection.auth.bearer
     return None
 
 
@@ -544,15 +520,13 @@ def get_version(request):
 
 def get_base_url(request):
     url = get_backend_url(request.config)
-    if not url:
-        url = "https://openeo-dev.eodc.eu/"
     parsed_url = urlparse(url)
     # If the scheme is missing, add 'https://'.
     if not parsed_url.scheme:
         url = "https://" + url
-    # If the path is missing or doesn't contain 'openeo', query the '.well-known' endpoint.
+    # If the path is missing or doesn't contain 'openeo', query the '.well-known' endpoint. this is a failsafe.
     if not parsed_url.path or "openeo" not in parsed_url.path:
         requests_response = requests.get(url + "/.well-known/openeo")
         data = json.loads(requests_response.content)
-        url = data["versions"][0]["url"]
+        url = data["versions"][-1]["url"]
     return url
