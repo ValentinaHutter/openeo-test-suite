@@ -1,5 +1,6 @@
 import numpy as np
 
+from openeo_test_suite.lib.validate_stac import validate_stac_dict
 from openeo_test_suite.lib.workflows.io import (
     load_geotiff_dataarray,
     load_netcdf_dataarray,
@@ -118,3 +119,28 @@ def test_load_save_geotiff(
     assert (data[x_dim].max().values + x_res / 2) >= bounding_box_32632["east"]
     assert (data[y_dim].min().values - y_res / 2) <= bounding_box_32632["north"]
     assert (data[y_dim].max().values + y_res / 2) >= bounding_box_32632["south"]
+
+
+def test_load_save_netcdf_batch_job_metadata(
+    skipper,
+    cube_red_10x10,
+    collection_dims,
+    tmp_path,
+):
+    skipper.skip_if_no_netcdf_support()
+
+    filename = tmp_path / "test_load_save_netcdf_batch_job_metadata.nc"
+    b_dim = collection_dims["b_dim"]
+    x_dim = collection_dims["x_dim"]
+    y_dim = collection_dims["y_dim"]
+    t_dim = collection_dims["t_dim"]
+
+    skipper.skip_if_unselected_process(cube_red_10x10)
+    job = cube_red_10x10.execute_batch(outputfile=filename)
+
+    assert job.status() == "finished"
+    job_results = job.get_results()
+    results_metadata = job_results.get_metadata()
+    assert validate_stac_dict(results_metadata)
+    assert "type" in results_metadata
+    assert results_metadata["type"] in ["Collection", "Feature"]
