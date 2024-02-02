@@ -130,10 +130,6 @@ def test_load_save_netcdf_batch_job_metadata(
     skipper.skip_if_no_netcdf_support()
 
     filename = tmp_path / "test_load_save_netcdf_batch_job_metadata.nc"
-    b_dim = collection_dims["b_dim"]
-    x_dim = collection_dims["x_dim"]
-    y_dim = collection_dims["y_dim"]
-    t_dim = collection_dims["t_dim"]
 
     skipper.skip_if_unselected_process(cube_red_10x10)
     job = cube_red_10x10.execute_batch(outputfile=filename)
