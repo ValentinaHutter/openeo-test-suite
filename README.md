@@ -244,10 +244,7 @@ pytest --runner=dask src/openeo_test_suite/tests/processes
 ```
 
 
-
-
-
-## Authentication of the basic `connection` fixture
+### Authentication of the basic `connection` fixture
 
 The test suite provides a basic `connection` fixture
 (an `openeo.Connection` object as defined in the `openeo` Python library package)
