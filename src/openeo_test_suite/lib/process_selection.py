@@ -42,7 +42,7 @@ def set_process_selection_from_config(config: pytest.Config):
 
 # TODO: more structural/testable solution for get_selected_processes related caching?
 @functools.lru_cache()
-def get_selected_processes() -> Iterable[ProcessData]:
+def get_selected_processes() -> List[ProcessData]:
     """
     Get effective list of processes extracted from the process registry
     with filtering based on command line options
@@ -51,10 +51,12 @@ def get_selected_processes() -> Iterable[ProcessData]:
     global _process_filters
     assert isinstance(_process_filters, ProcessFilters)
 
-    return ProcessRegistry().get_processes_filtered(
-        process_ids=_process_filters.process_ids,
-        process_levels=_process_filters.process_levels,
-        experimental=_process_filters.experimental,
+    return list(
+        ProcessRegistry().get_processes_filtered(
+            process_ids=_process_filters.process_ids,
+            process_levels=_process_filters.process_levels,
+            experimental=_process_filters.experimental,
+        )
     )
 
 
