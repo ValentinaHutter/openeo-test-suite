@@ -55,7 +55,7 @@ focussing on a specific API aspect to test or verify
       --html=reports/individual-processes.html
     ```
     Note that this invocation will not actually execute anything,
-    see [WP5 Specifics](#WP5-specifics) for more information and functional examples.
+    see [WP5 Specifics](#wp5-specifics) for more information and functional examples.
 - **WP6 Full process graph execution and validation** (lead implementation partner: EURAC)
   - Main location: [`src/openeo_test_suite/tests/workflows`](./src/openeo_test_suite/tests/workflows)
   - Provides tests to run full processes graphs and evaluate the results.
@@ -66,7 +66,7 @@ focussing on a specific API aspect to test or verify
       --s2-collection SENTINEL2_L2A \
       --html=reports/workflows.html
     ```
-   - See [WP6 Specifics](#WP6-specifics) for some more details and examples.
+   - See [WP6 Specifics](#wp6-specifics) for some more details and examples.
 
 
 ## Installation and setup
@@ -125,7 +125,7 @@ without the need of (re)installing the project.
 ### Additional optional dependencies related to runners for individual process testing <a name="runner-dependencies"></a>
 
 The individual process testing module of the test suite allows to pick
-a specific process "runner" (see [WP5 specifics](#WP5-specifics) for more documentation).
+a specific process "runner" (see [WP5 specifics](#wp5-specifics) for more documentation).
 Some of these runners require additional optional dependencies to be installed in your virtual environment,
 which can be done by providing an appropriate "extra" identifier in the `pip install` command:
 
@@ -212,7 +212,7 @@ which is driven by the `OPENEO_AUTH_METHOD` environment variable:
 Some test modules have specific considerations and options to be aware of.
 
 
-### WP5. Individual process testing: process runners <a name="WP5-specifics"></a>
+### WP5. Individual process testing: process runners <a name="wp5-specifics"></a>
 
 The goal of the **individual process testing** module of the test suite
 is testing each openEO process individually with one or more pairs of input and expected output.
@@ -276,7 +276,7 @@ pytest --runner=dask src/openeo_test_suite/tests/processes
 
 
 
-### WP6. Full process graph execution and validation <a name="WP6-specifics"></a>
+### WP6. Full process graph execution and validation <a name="wp6-specifics"></a>
 
 These tests are designed to run using synchronous openEO process calls
 and a Sentinel-2(-like) collection.
