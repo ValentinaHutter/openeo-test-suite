@@ -270,6 +270,54 @@ which is driven by the `OPENEO_AUTH_METHOD` environment variable:
     for instructions on how to complete the authentication flow.
 
 
+## Test module specifics
+
+Some test modules have specific considerations and options to be aware of.
+
+### WP6 Full process graph execution and validation <a name="WP6-specifics"></a>
+
+These tests are designed to run using synchronous openEO process calls
+and a Sentinel-2(-like) collection.
+
+The S2 collection to use must be specified through the `--s2-collection` option,
+which supports two forms:
+
+- a normal openEO collection name (e.g. `--s2-collection=SENTINEL2_L2A`)
+  which will be loaded through the standard openEO `load_collection` process.
+- a STAC URL (typically starting with `https://`),
+  which will be loaded with `load_stac`.
+
+  The following two example STAC collections are provided in the context of this test suite project.
+  Each of these exists to cater to subtle differences between some back-end implementations
+  regarding temporal and band dimension naming and how that is handled in `load_stac`.
+   - https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE:
+     defines `"t"` as temporal dimension name, and `"bands"` as bands dimension name.
+     Recommended to be used with VITO/CDSE openEO backends.
+   - https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE_2:
+     uses `"time"` as temporal dimension name, and `"band"` as bands dimension name.
+     Recommended to be used with EURAC and EODC openEO backends.
+
+If the back-end does not support `load_stac`, a collection name must be used.
+
+#### Usage examples:
+
+```bash
+# Compact
+pytest src/openeo_test_suite/tests/workflows \
+    -U openeo.dataspace.copernicus.eu \
+    --s2-collection=SENTINEL2_L2A
+
+# With full back-end URL, a STAC collection to use instead of a predefined openEO collection
+# and a list of process levels to test against
+pytest src/openeo_test_suite/tests/workflows \
+    --openeo-backend-url=https://openeo.dataspace.copernicus.eu/openeo/1.2 \
+    --s2-collection=https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE \
+    --process-levels=L1,L2
+```
+
+
+
+
 ## Reporting
 
 Being a `pytest` based test suite, various plugins can be used to generate reports in different formats as desired.
