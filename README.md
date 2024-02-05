@@ -55,8 +55,7 @@ focussing on a specific API aspect to test or verify
       --html=reports/individual-processes.html
     ```
     Note that this invocation will not actually execute anything,
-    see the [runner info](#individual-process-testing-runner)
-    and the [more extensive usage examples](#individual-process-testing-examples) for more information and functional examples.
+    see [WP5 Specifics](#WP5-specifics) for more information and functional examples.
 - **WP6 Full process graph execution and validation** (lead implementation partner: EURAC)
   - Main location: [`src/openeo_test_suite/tests/workflows`](./src/openeo_test_suite/tests/workflows)
   - Provides tests to run full processes graphs and evaluate the results.
@@ -67,6 +66,7 @@ focussing on a specific API aspect to test or verify
       --s2-collection SENTINEL2_L2A \
       --html=reports/workflows.html
     ```
+   - See [WP6 Specifics](#WP6-specifics) for some more details and examples.
 
 
 ## Installation and setup
@@ -125,7 +125,7 @@ without the need of (re)installing the project.
 ### Additional optional dependencies related to runners for individual process testing <a name="runner-dependencies"></a>
 
 The individual process testing module of the test suite allows to pick
-a specific process "runner" (see [further](#individual-process-testing-runner) for more documentation).
+a specific process "runner" (see [WP5 specifics](#WP5-specifics) for more documentation).
 Some of these runners require additional optional dependencies to be installed in your virtual environment,
 which can be done by providing an appropriate "extra" identifier in the `pip install` command:
 
@@ -181,7 +181,38 @@ If both are specified, the union of both will be considered.
   kept irrespective of this option.
 
 
-### Runner for individual process testing <a name="individual-process-testing-runner"></a>
+### Authentication of the basic `connection` fixture
+
+The test suite provides a basic `connection` fixture
+(an `openeo.Connection` object as defined in the `openeo` Python library package)
+to interact with the backend.
+
+There are several ways to set up authentication for this connection fixture,
+building on the ["dynamic authentication method selection" feature of the `openeo` Python library package](https://open-eo.github.io/openeo-python-client/auth.html#oidc-authentication-dynamic-method-selection),
+which is driven by the `OPENEO_AUTH_METHOD` environment variable:
+
+- `OPENEO_AUTH_METHOD=none`: no authentication will be done
+- `OPENEO_AUTH_METHOD=basic`: basic authentication will be triggered.
+  Username and password can be specified through additional environment variables
+  `OPENEO_AUTH_BASIC_USERNAME`, and `OPENEO_AUTH_BASIC_PASSWORD`.
+  Alternatively, it is also possible to handle basic auth credentials through
+  the [auth configuration system and `openeo-auth` tool](https://open-eo.github.io/openeo-python-client/auth.html#auth-config-files-and-openeo-auth-helper-tool)
+  from the `openeo` Python library package.
+- `OPENEO_AUTH_METHOD=client_credentials`: OIDC with "client credentials" grant,
+  which [assumes some additional environment variables to set the client credentials](https://open-eo.github.io/openeo-python-client/auth.html#oidc-client-credentials-using-environment-variables).
+- If nothing is specified (the default), the default behavior of `connection.authenticate_oidc()` is followed:
+  - Valid OIDC refresh tokens will be used if available
+  - Otherwise, the OIDC device code flow is initiated.
+    Make sure to check the logging/output of the test suite run
+    for instructions on how to complete the authentication flow.
+
+
+## Test module specifics
+
+Some test modules have specific considerations and options to be aware of.
+
+
+### WP5. Individual process testing: process runners <a name="WP5-specifics"></a>
 
 The goal of the **individual process testing** module of the test suite
 is testing each openEO process individually with one or more pairs of input and expected output.
@@ -222,7 +253,7 @@ for more details about these runners and inspiration to implement your own runne
 
 
 
-#### Usage examples of individual process testing with runner option <a name="individual-process-testing-examples"></a>
+#### Usage examples of individual process testing with runner option
 
 The individual process tests can be run by specifying the `src/openeo_test_suite/tests/processes/processing` as test path.
 Some use examples with different options discussed above:
@@ -244,37 +275,8 @@ pytest --runner=dask src/openeo_test_suite/tests/processes
 ```
 
 
-### Authentication of the basic `connection` fixture
 
-The test suite provides a basic `connection` fixture
-(an `openeo.Connection` object as defined in the `openeo` Python library package)
-to interact with the backend.
-
-There are several ways to set up authentication for this connection fixture,
-building on the ["dynamic authentication method selection" feature of the `openeo` Python library package](https://open-eo.github.io/openeo-python-client/auth.html#oidc-authentication-dynamic-method-selection),
-which is driven by the `OPENEO_AUTH_METHOD` environment variable:
-
-- `OPENEO_AUTH_METHOD=none`: no authentication will be done
-- `OPENEO_AUTH_METHOD=basic`: basic authentication will be triggered.
-  Username and password can be specified through additional environment variables
-  `OPENEO_AUTH_BASIC_USERNAME`, and `OPENEO_AUTH_BASIC_PASSWORD`.
-  Alternatively, it is also possible to handle basic auth credentials through
-  the [auth configuration system and `openeo-auth` tool](https://open-eo.github.io/openeo-python-client/auth.html#auth-config-files-and-openeo-auth-helper-tool)
-  from the `openeo` Python library package.
-- `OPENEO_AUTH_METHOD=client_credentials`: OIDC with "client credentials" grant,
-  which [assumes some additional environment variables to set the client credentials](https://open-eo.github.io/openeo-python-client/auth.html#oidc-client-credentials-using-environment-variables).
-- If nothing is specified (the default), the default behavior of `connection.authenticate_oidc()` is followed:
-  - Valid OIDC refresh tokens will be used if available
-  - Otherwise, the OIDC device code flow is initiated.
-    Make sure to check the logging/output of the test suite run
-    for instructions on how to complete the authentication flow.
-
-
-## Test module specifics
-
-Some test modules have specific considerations and options to be aware of.
-
-### WP6 Full process graph execution and validation <a name="WP6-specifics"></a>
+### WP6. Full process graph execution and validation <a name="WP6-specifics"></a>
 
 These tests are designed to run using synchronous openEO process calls
 and a Sentinel-2(-like) collection.
