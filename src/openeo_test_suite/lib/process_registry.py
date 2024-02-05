@@ -67,11 +67,9 @@ class ProcessRegistry:
             raise ValueError(f"Invalid process test root directory: {self._root}")
         _log.info(f"Loading process definitions from {self._root}")
 
-        process_paths_m = list(self._root.glob("*.json"))
-        process_paths_p = list(self._root.glob("proposals/*.json"))
-
-        process_paths = process_paths_p + process_paths_m
-
+        process_paths = itertools.chain(
+            self._root.glob("*.json"), self._root.glob("proposals/*.json")
+        )
         for path in process_paths:
             test_metadata_path = self._root_json5 / f"{path.stem}.json5"
             try:
