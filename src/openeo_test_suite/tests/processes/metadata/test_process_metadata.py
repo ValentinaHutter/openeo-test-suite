@@ -24,18 +24,14 @@ def api_processes():
     return json.loads(response.content)["processes"]
 
 
-_get_selected_processes = get_selected_processes.__wrapped__
-
-
-def get_examples():
-    """Collect process examples/tests from examples root folder containing JSON5 files."""
-    return [process for process in _get_selected_processes()]
-
-
 @pytest.mark.parametrize(
     "expected_process",
-    [process for process in get_examples() if process.metadata != {}],
-    ids=[process.process_id for process in get_examples() if process.metadata != {}],
+    [process for process in get_selected_processes() if process.metadata != {}],
+    ids=[
+        process.process_id
+        for process in get_selected_processes()
+        if process.metadata != {}
+    ],
 )
 def test_process_metadata_functional(api_processes, expected_process, skipper):
     """
@@ -82,8 +78,12 @@ def test_process_metadata_functional(api_processes, expected_process, skipper):
 
 @pytest.mark.parametrize(
     "expected_process",
-    [process for process in get_examples() if process.metadata != {}],
-    ids=[process.process_id for process in get_examples() if process.metadata != {}],
+    [process for process in get_selected_processes() if process.metadata != {}],
+    ids=[
+        process.process_id
+        for process in get_selected_processes()
+        if process.metadata != {}
+    ],
 )
 def test_process_metadata_non_functional(api_processes, expected_process, skipper):
     """
