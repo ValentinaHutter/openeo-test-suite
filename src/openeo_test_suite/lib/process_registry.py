@@ -102,7 +102,7 @@ class ProcessRegistry:
         process_ids: Optional[List[str]] = None,
         process_levels: Optional[List[str]] = None,
         experimental: bool = False,
-    ) -> Iterable[ProcessData]:
+    ) -> Iterator[ProcessData]:
         """
         Collect processes matching with additional filtering:
 
