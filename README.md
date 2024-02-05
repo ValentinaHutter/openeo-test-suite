@@ -135,7 +135,7 @@ which can be done by providing an appropriate "extra" identifier in the `pip ins
     ```
 - For the "vito" runner:
     ```bash
-    pip install -e .[vito] --extra-index-url https://artifactory.vgt.vito.be/api/pypi/python-openeo/simple
+    pip install -e .[vito]
     ```
 
 Note that it might be not possible to install both "dask" and "vito" extras
