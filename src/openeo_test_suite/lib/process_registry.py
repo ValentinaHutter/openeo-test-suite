@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 from dataclasses import dataclass
@@ -17,7 +16,6 @@ class ProcessData:
     """Process data, including profile level and list of tests"""
 
     process_id: str
-    metadata: dict
     level: str
     tests: List[dict]  # TODO: also make dataclass for each test?
     experimental: bool
@@ -65,7 +63,6 @@ class ProcessRegistry:
             raise ValueError(f"Invalid process test root directory: {self._root}")
         _log.info(f"Loading process definitions from {self._root}")
         for path in self._root.glob("*.json5"):
-            metadata_path = path.parent.parent / f"{path.stem}.json"
             try:
                 with path.open() as f:
                     data = json5.load(f)
@@ -73,16 +70,8 @@ class ProcessRegistry:
                     raise ValueError(
                         f"Process id mismatch between id {data['id']!r} and filename {path.name!r}"
                     )
-                # Metadata is stored in sibling json file
-                if metadata_path.exists():
-                    with metadata_path.open() as f:
-                        metadata = json.load(f)
-                else:
-                    metadata = {}
-
                 yield ProcessData(
                     process_id=data["id"],
-                    metadata=metadata,
                     level=data.get("level"),
                     tests=data.get("tests", []),
                     experimental=data.get("experimental", False),
