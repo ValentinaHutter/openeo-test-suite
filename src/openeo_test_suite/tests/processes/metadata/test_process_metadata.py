@@ -6,6 +6,7 @@ from openeo_test_suite.lib.process_selection import get_selected_processes
 from openeo_test_suite.lib.backend_under_test import (
     get_backend_under_test,
 )
+import warnings
 
 
 @pytest.fixture(scope="module")
@@ -42,7 +43,7 @@ def test_process_metadata_functional(api_processes, expected_process, skipper):
 
     Any process that has no metadata is skipped.
 
-    These are the functional parts of the process metadata, e.g. existence (has to be checked) the parameters and return type.
+    These are the functional parts of the process metadata e.g.: the parameters and return type.
     """
 
     skipper.skip_if_unsupported_process(expected_process.process_id)
@@ -57,7 +58,22 @@ def test_process_metadata_functional(api_processes, expected_process, skipper):
     expected_parameters = expected_process.metadata.get("parameters", [])
     actual_parameters = actual_process["parameters"]
 
-    assert len(expected_parameters) == len(actual_parameters)
+    if len(expected_parameters) > len(actual_parameters):
+        warnings.warn(
+            f"Process {expected_process.process_id} has {len(expected_parameters)} expected parameters, but only {len(actual_parameters)} actual parameters"
+        )
+        for expected_parameter in expected_parameters[len(actual_parameters) :]:
+            assert expected_parameter.get("default", None) != None
+
+    if len(expected_parameters) < len(actual_parameters):
+        warnings.warn(
+            f"Process {expected_process.process_id} has {len(expected_parameters)} expected parameters, but {len(actual_parameters)} actual parameters"
+        )
+        for actual_parameter in actual_parameters[len(expected_parameters) :]:
+            assert actual_parameter.get("default", None) != None
+
+    # Check if the expected parameters are in the actual parameters
+    # throw a warning if there are added parameters with default values
 
     for expected_parameter, actual_parameter in zip(
         expected_parameters, actual_parameters
@@ -76,6 +92,13 @@ def test_process_metadata_functional(api_processes, expected_process, skipper):
 
     actual_return_type = actual_process["returns"]
     assert expected_return_type["schema"] == actual_return_type["schema"]
+
+    # Tests the deprecated and experimental flags (Should be true if expected process is true as well, but not the other way around)
+    if expected_process.metadata.get("experimental", False):
+        assert actual_process.get("experimental", False)
+
+    if expected_process.metadata.get("deprecated", False):
+        assert actual_process.get("deprecated", False)
 
 
 @pytest.mark.parametrize(

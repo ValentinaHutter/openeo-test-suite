@@ -40,7 +40,15 @@ focussing on a specific API aspect to test or verify
     ```
 - **WP3 Validation of process metadata** (lead implementation partner: EODC)
   - Main location: [`src/openeo_test_suite/tests/processes/metadata`](./src/openeo_test_suite/tests/processes/metadata)
-  - TODO: [Open-EO/openeo-test-suite#19](https://github.com/Open-EO/openeo-test-suite/issues/19)
+  - Defines tests to validate openEO process metadata against specs
+    defined in the [openeo-processes](https://github.com/Open-EO/openeo-processes) project
+  - Usage example for running these tests against a desired openEO backend URL:
+    ```bash
+    pytest src/openeo_test_suite/tests/processes/metadata \
+      --html=reports/process-metadata.html \
+      --openeo-backend-url=openeo.example
+
+    ```
 - **WP4 General openEO API compliance validation** (lead implementation partner: EODC)
   - TODO: [Open-EO/openeo-test-suite#20](https://github.com/Open-EO/openeo-test-suite/issues/20)
 - **WP5 Individual process testing** (lead implementation partner: M. Mohr)
