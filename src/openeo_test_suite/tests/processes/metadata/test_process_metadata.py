@@ -1,6 +1,7 @@
 import json
 import pytest
 import requests
+from openeo_test_suite.lib.process_registry import ProcessData
 from openeo_test_suite.lib.process_selection import get_selected_processes
 from openeo_test_suite.lib.backend_under_test import (
     get_backend_under_test,
@@ -24,14 +25,15 @@ def api_processes():
     return json.loads(response.content)["processes"]
 
 
+def _get_test_id(val):
+    if isinstance(val, ProcessData):
+        return val.process_id
+
+
 @pytest.mark.parametrize(
     "expected_process",
-    [process for process in get_selected_processes() if process.metadata != {}],
-    ids=[
-        process.process_id
-        for process in get_selected_processes()
-        if process.metadata != {}
-    ],
+    [p for p in get_selected_processes() if p.metadata],
+    ids=_get_test_id,
 )
 def test_process_metadata_functional(api_processes, expected_process, skipper):
     """
@@ -78,12 +80,8 @@ def test_process_metadata_functional(api_processes, expected_process, skipper):
 
 @pytest.mark.parametrize(
     "expected_process",
-    [process for process in get_selected_processes() if process.metadata != {}],
-    ids=[
-        process.process_id
-        for process in get_selected_processes()
-        if process.metadata != {}
-    ],
+    [p for p in get_selected_processes() if p.metadata],
+    ids=_get_test_id,
 )
 def test_process_metadata_non_functional(api_processes, expected_process, skipper):
     """

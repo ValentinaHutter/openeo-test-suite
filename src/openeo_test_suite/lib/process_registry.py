@@ -1,3 +1,4 @@
+import itertools
 import json
 import logging
 import os
@@ -34,12 +35,13 @@ class ProcessRegistry:
         """
         :param root: Root directory of the tests folder in  openeo-processes project
         """
-        self._root = Path(
-            root
-            # TODO: eliminate need for this env var?
+
+        self._root = Path(root or self._guess_root())
+        self._root_json5 = Path(
+            self._root.joinpath("tests")
             or os.environ.get("OPENEO_TEST_SUITE_PROCESSES_TEST_ROOT")
-            or self._guess_root()
         )
+
         # Lazy load cache
         self._processes: Union[None, List[ProcessData]] = None
 
@@ -47,9 +49,9 @@ class ProcessRegistry:
         # TODO: avoid need for guessing and properly include assets in (installed) package
         project_root = Path(openeo_test_suite.__file__).parents[2]
         candidates = [
-            project_root / "assets/processes/tests",
-            Path("./assets/processes/tests"),
-            Path("./openeo-test-suite/assets/processes/tests"),
+            project_root / "assets/processes",
+            Path("./assets/processes"),
+            Path("./openeo-test-suite/assets/processes"),
         ]
         for candidate in candidates:
             if candidate.exists() and candidate.is_dir():
@@ -64,27 +66,31 @@ class ProcessRegistry:
         if not self._root.is_dir():
             raise ValueError(f"Invalid process test root directory: {self._root}")
         _log.info(f"Loading process definitions from {self._root}")
-        for path in self._root.glob("*.json5"):
-            metadata_path = path.parent.parent / f"{path.stem}.json"
+
+        processe_paths = itertools.chain(
+            self._root.glob("*.json"), self._root.glob("proposals/*.json")
+        )
+        for path in processe_paths:
+            test_metadata_path = self._root_json5 / f"{path.stem}.json5"
             try:
                 with path.open() as f:
-                    data = json5.load(f)
+                    data = json.load(f)
                 if data["id"] != path.stem:
                     raise ValueError(
                         f"Process id mismatch between id {data['id']!r} and filename {path.name!r}"
                     )
                 # Metadata is stored in sibling json file
-                if metadata_path.exists():
-                    with metadata_path.open() as f:
-                        metadata = json.load(f)
+                if test_metadata_path.exists():
+                    with test_metadata_path.open() as f:
+                        metadata = json5.load(f)
                 else:
                     metadata = {}
 
                 yield ProcessData(
                     process_id=data["id"],
-                    metadata=metadata,
-                    level=data.get("level"),
-                    tests=data.get("tests", []),
+                    metadata=data,
+                    level=metadata.get("level", "L4"),
+                    tests=metadata.get("tests", []),
                     experimental=data.get("experimental", False),
                     path=path,
                 )
