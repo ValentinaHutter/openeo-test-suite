@@ -1,7 +1,7 @@
 from openapi_core import Spec
 import pytest
 import requests
-import openeo_test_suite.tests.general.compliance_util as conformance_util
+import openeo_test_suite.lib.compliance_util as conformance_util
 import uuid
 
 
@@ -20,8 +20,8 @@ def domain(request):
 
 @pytest.fixture(scope="session")
 def spec(request):
-    return conformance_util.adjust_spec_json(
-        conformance_util.get_spec_path_json(),
+    return conformance_util.adjust_spec(
+        conformance_util.get_spec_path(),
         conformance_util.get_base_url(request),
         conformance_util.get_domain(request),
     )
@@ -263,12 +263,6 @@ def test_GET_me(base_url: str, spec: Spec, bearer_token: str):
         )
 
     assert fail_log == ""
-
-
-def test_GET_collections_collection_id_queryables(
-    base_url: str, spec: Spec, bearer_token: str
-):
-    raise NotImplementedError()
 
 
 def test_GET_process_graphs(base_url: str, spec: Spec, bearer_token: str):

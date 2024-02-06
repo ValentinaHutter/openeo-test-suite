@@ -281,11 +281,9 @@ def check_test_results(e: Exception):
     return fail_log
 
 
-# THIS IS A WORKAROUND,
-# this can be removed IF the cause of ServerNotFound Exception has been fixed
-def adjust_server_in_json(path_to_json, endpoint):
-    with open(path_to_json, "r") as file:
-        data = json.load(file)
+def adjust_server(path_to_file, endpoint):
+    with open(path_to_file, "r") as file:
+        data = yaml.safe_load(file)
 
     if "servers" in data and isinstance(data["servers"], list):
         for server in data["servers"]:
@@ -294,13 +292,13 @@ def adjust_server_in_json(path_to_json, endpoint):
     return data
 
 
-def adjust_spec_json(path_to_json: str, endpoint: str, domain: str):
-    data = adjust_server_in_json(path_to_json=path_to_json, endpoint=endpoint)
-    data = adjust_server_in_well_known_json(data=data, endpoint=domain)
+def adjust_spec(path_to_file: str, endpoint: str, domain: str):
+    data = adjust_server(path_to_file=path_to_file, endpoint=endpoint)
+    data = adjust_server_in_well_known(data=data, endpoint=domain)
     return Spec.from_dict(data, validator=None)
 
 
-def adjust_server_in_well_known_json(data, endpoint):
+def adjust_server_in_well_known(data, endpoint):
     data["paths"]["/.well-known/openeo"]["get"]["servers"][0]["url"] = endpoint
 
     return data
@@ -330,8 +328,10 @@ def get_examples_path():
     )
 
 
-def get_spec_path_json():
-    return os.path.join(os.getcwd(), "src/openeo_test_suite/tests/general/openapi.json")
+def get_spec_path():
+    return os.path.join(
+        os.getcwd(), "src/openeo_test_suite/tests/general/openeo-api/openapi.yaml"
+    )
 
 
 def load_payloads_from_directory(directory_path: str) -> list[dict]:
@@ -454,7 +454,7 @@ def post_start_jobs(base_url: str, bearer_token: str):
         bearer_token=bearer_token,
         job_ids=created_batch_job_ids,
         job_statuses=["running"],
-        timeout=60,
+        timeout=10,
     )
     return created_batch_job_ids
 
