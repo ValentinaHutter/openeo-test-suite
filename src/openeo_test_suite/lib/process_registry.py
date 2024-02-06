@@ -18,7 +18,7 @@ class ProcessData:
     """Process data, including profile level and list of tests"""
 
     process_id: str
-    metadata: dict
+    spec: dict
     level: str
     tests: List[dict]  # TODO: also make dataclass for each test?
     experimental: bool
@@ -37,10 +37,7 @@ class ProcessRegistry:
         """
 
         self._root = Path(root or self._guess_root())
-        self._root_json5 = Path(
-            self._root.joinpath("tests")
-            or os.environ.get("OPENEO_TEST_SUITE_PROCESSES_TEST_ROOT")
-        )
+        self._root_json5 = Path(self._root.joinpath("tests"))
 
         # Lazy load cache
         self._processes: Union[None, List[ProcessData]] = None
@@ -88,7 +85,7 @@ class ProcessRegistry:
 
                 yield ProcessData(
                     process_id=data["id"],
-                    metadata=data,
+                    spec=data,
                     level=metadata.get("level", "L4"),
                     tests=metadata.get("tests", []),
                     experimental=data.get("experimental", False),

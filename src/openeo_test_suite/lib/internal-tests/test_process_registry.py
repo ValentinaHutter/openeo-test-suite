@@ -19,7 +19,7 @@ class TestProcessRegistry:
         assert process_data.process_id == "add"
         assert process_data.level == "L1"
         assert process_data.experimental is False
-        assert process_data.path.name + "5" == "add.json5"
+        assert process_data.path.name == "add.json"
         assert len(process_data.tests)
 
     def test_get_process_no_match(self, process_registry):
@@ -37,7 +37,7 @@ class TestProcessRegistry:
 
         assert add.level == "L1"
         assert add.experimental is False
-        assert add.path.name + "5" == "add.json5"
+        assert add.path.name == "add.json"
         assert len(add.tests)
 
         add00 = {"arguments": {"x": 0, "y": 0}, "returns": 0}
@@ -50,7 +50,7 @@ class TestProcessRegistry:
 
         assert divide.level == "L1"
         assert divide.experimental is False
-        assert divide.path.name + "5" == "divide.json5"
+        assert divide.path.name == "divide.json"
         assert len(divide.tests)
 
         divide0 = {
