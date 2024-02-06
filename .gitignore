@@ -172,3 +172,4 @@ pyrightconfig.json
 
 # vscode
 .vscode/
+pytest.ini
