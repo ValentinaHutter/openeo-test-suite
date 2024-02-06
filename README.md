@@ -45,7 +45,8 @@ focussing on a specific API aspect to test or verify
   - Functional tests concern actual values and behavior of processes (like parameters and return values),
     failures in these tests should be looked into and fixed.
   - Non-functional tests concern descriptions and other metadata of processes that have no impact on the actual behavior of the process,
-    failures in these tests should be taken as warnings, but don't necessarily need to be fixed.
+    failures in these tests should be taken as warnings, but don't necessarily need to be fixed. These can be skipped by adding
+    '-m "not optional"' to the pytest command.
   - Usage example for running these tests against a desired openEO backend URL:
     ```bash
     pytest src/openeo_test_suite/tests/processes/metadata \
@@ -320,7 +321,6 @@ Some general guidelines:
   extend existing tests or add new tests at `src/openeo_test_suite/tests/collections`.
 - Validation of process metadata:
   add new tests to `src/openeo_test_suite/tests/processes/metadata`.
-  - TODO: [Open-EO/openeo-test-suite#19](https://github.com/Open-EO/openeo-test-suite/issues/19)
 - General openEO API compliance validation:
   - TODO: [Open-EO/openeo-test-suite#20](https://github.com/Open-EO/openeo-test-suite/issues/20)
 - Individual process testing:

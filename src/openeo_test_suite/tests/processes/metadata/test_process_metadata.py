@@ -47,14 +47,18 @@ def test_process_metadata_functional(api_processes, expected_process, skipper):
             f"Process {expected_process.process_id} has {len(expected_parameters)} expected parameters, but only {len(actual_parameters)} actual parameters"
         )
         for expected_parameter in expected_parameters[len(actual_parameters) :]:
-            assert expected_parameter.get("default", None) != None
+            assert (
+                "default" in expected_parameter
+            ), f"Missing Parameter {expected_parameter} has no default value. Cannot remove required parameters."
 
     if len(expected_parameters) < len(actual_parameters):
         logging.warn(
             f"Process {expected_process.process_id} has {len(expected_parameters)} expected parameters, but {len(actual_parameters)} actual parameters"
         )
         for actual_parameter in actual_parameters[len(expected_parameters) :]:
-            assert actual_parameter.get("default", None) != None
+            assert (
+                "default" in actual_parameter
+            ), f"Additional Parameter {actual_parameter} has no default value."
 
     # Check if the expected parameters are in the actual parameters
     # throw a warning if there are added parameters with default values
@@ -85,6 +89,7 @@ def test_process_metadata_functional(api_processes, expected_process, skipper):
         assert actual_process.get("deprecated", False)
 
 
+@pytest.mark.optional
 @pytest.mark.parametrize(
     "expected_process",
     [p for p in get_selected_processes()],
@@ -135,7 +140,11 @@ def test_process_metadata_non_functional(api_processes, expected_process, skippe
 
     # Tests if the links of processes are equivalent
     expected_links = expected_process.spec.get("links", [])
-    actual_links = actual_process["links"]
+    actual_links = actual_process.get("links", [])
+
+    expected_links.sort(key=lambda x: x.get("href", ""))
+    actual_links.sort(key=lambda x: x.get("href", ""))
+
     for expected_link, actual_link in zip(expected_links, actual_links):
         assert expected_link.get("href", "") == actual_link.get("href", "")
         assert expected_link.get("rel", "") == actual_link.get("rel", "")

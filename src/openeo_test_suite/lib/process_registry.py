@@ -86,7 +86,9 @@ class ProcessRegistry:
                 yield ProcessData(
                     process_id=data["id"],
                     spec=data,
-                    level=metadata.get("level", "L4"),
+                    level=metadata.get(
+                        "level", "L4"
+                    ),  # default to L4 is intended for processes without a specific level
                     tests=metadata.get("tests", []),
                     experimental=data.get("experimental", False),
                     path=path,
