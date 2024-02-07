@@ -40,7 +40,19 @@ focussing on a specific API aspect to test or verify
     ```
 - **WP3 Validation of process metadata** (lead implementation partner: EODC)
   - Main location: [`src/openeo_test_suite/tests/processes/metadata`](./src/openeo_test_suite/tests/processes/metadata)
-  - TODO: [Open-EO/openeo-test-suite#19](https://github.com/Open-EO/openeo-test-suite/issues/19)
+  - Defines tests to validate openEO process metadata against specs
+    defined in the [openeo-processes](https://github.com/Open-EO/openeo-processes) project
+  - Functional tests concern actual values and behavior of processes (like parameters and return values),
+    failures in these tests should be looked into and fixed.
+  - Non-functional tests concern descriptions and other metadata of processes that have no impact on the actual behavior of the process,
+    failures in these tests should be taken as warnings, but don't necessarily need to be fixed. These can be skipped by adding
+    `-m "not optional"` to the pytest command.
+  - Usage example for running these tests against a desired openEO backend URL:
+    ```bash
+    pytest src/openeo_test_suite/tests/processes/metadata \
+      -U openeo.example \
+      --html=reports/process-metadata.html
+    ```
 - **WP4 General openEO API compliance validation** (lead implementation partner: EODC)
   - TODO: [Open-EO/openeo-test-suite#20](https://github.com/Open-EO/openeo-test-suite/issues/20)
 - **WP5 Individual process testing** (lead implementation partner: M. Mohr)
@@ -55,8 +67,7 @@ focussing on a specific API aspect to test or verify
       --html=reports/individual-processes.html
     ```
     Note that this invocation will not actually execute anything,
-    see the [runner info](#individual-process-testing-runner)
-    and the [more extensive usage examples](#individual-process-testing-examples) for more information and functional examples.
+    see [WP5 Specifics](#wp5-specifics) for more information and functional examples.
 - **WP6 Full process graph execution and validation** (lead implementation partner: EURAC)
   - Main location: [`src/openeo_test_suite/tests/workflows`](./src/openeo_test_suite/tests/workflows)
   - Provides tests to run full processes graphs and evaluate the results.
@@ -67,6 +78,7 @@ focussing on a specific API aspect to test or verify
       --s2-collection SENTINEL2_L2A \
       --html=reports/workflows.html
     ```
+   - See [WP6 Specifics](#wp6-specifics) for some more details and examples.
 
 
 ## Installation and setup
@@ -125,7 +137,7 @@ without the need of (re)installing the project.
 ### Additional optional dependencies related to runners for individual process testing <a name="runner-dependencies"></a>
 
 The individual process testing module of the test suite allows to pick
-a specific process "runner" (see [further](#individual-process-testing-runner) for more documentation).
+a specific process "runner" (see [WP5 specifics](#wp5-specifics) for more documentation).
 Some of these runners require additional optional dependencies to be installed in your virtual environment,
 which can be done by providing an appropriate "extra" identifier in the `pip install` command:
 
@@ -135,7 +147,7 @@ which can be done by providing an appropriate "extra" identifier in the `pip ins
     ```
 - For the "vito" runner:
     ```bash
-    pip install -e .[vito] --extra-index-url https://artifactory.vgt.vito.be/api/pypi/python-openeo/simple
+    pip install -e .[vito]
     ```
 
 Note that it might be not possible to install both "dask" and "vito" extras
@@ -181,7 +193,50 @@ If both are specified, the union of both will be considered.
   kept irrespective of this option.
 
 
-### Runner for individual process testing <a name="individual-process-testing-runner"></a>
+### Recommended `pytest` options
+
+pytest provides a [lot of command-line options](https://docs.pytest.org/en/8.0.x/reference/reference.html#command-line-flags)
+to fine-tune how the test suite is executed (test selection, reporting, ...).
+Some recommended options to use in practice:
+
+- `-vv`: increase verbosity while running the test,
+  e.g. to have a better idea of the progress of slow tests.
+- `--tb=no`: avoid output of full stack traces,
+  which give little to no added value for some test modules.
+
+
+### Authentication of the basic `connection` fixture
+
+The test suite provides a basic `connection` fixture
+(an `openeo.Connection` object as defined in the `openeo` Python library package)
+to interact with the backend.
+
+There are several ways to set up authentication for this connection fixture,
+building on the ["dynamic authentication method selection" feature of the `openeo` Python library package](https://open-eo.github.io/openeo-python-client/auth.html#oidc-authentication-dynamic-method-selection),
+which is driven by the `OPENEO_AUTH_METHOD` environment variable:
+
+- `OPENEO_AUTH_METHOD=none`: no authentication will be done
+- `OPENEO_AUTH_METHOD=basic`: basic authentication will be triggered.
+  Username and password can be specified through additional environment variables
+  `OPENEO_AUTH_BASIC_USERNAME`, and `OPENEO_AUTH_BASIC_PASSWORD`.
+  Alternatively, it is also possible to handle basic auth credentials through
+  the [auth configuration system and `openeo-auth` tool](https://open-eo.github.io/openeo-python-client/auth.html#auth-config-files-and-openeo-auth-helper-tool)
+  from the `openeo` Python library package.
+- `OPENEO_AUTH_METHOD=client_credentials`: OIDC with "client credentials" grant,
+  which [assumes some additional environment variables to set the client credentials](https://open-eo.github.io/openeo-python-client/auth.html#oidc-client-credentials-using-environment-variables).
+- If nothing is specified (the default), the default behavior of `connection.authenticate_oidc()` is followed:
+  - Valid OIDC refresh tokens will be used if available
+  - Otherwise, the OIDC device code flow is initiated.
+    Make sure to check the logging/output of the test suite run
+    for instructions on how to complete the authentication flow.
+
+
+## Test module specifics
+
+Some test modules have specific considerations and options to be aware of.
+
+
+### WP5. Individual process testing: process runners <a name="wp5-specifics"></a>
 
 The goal of the **individual process testing** module of the test suite
 is testing each openEO process individually with one or more pairs of input and expected output.
@@ -222,7 +277,7 @@ for more details about these runners and inspiration to implement your own runne
 
 
 
-#### Usage examples of individual process testing with runner option <a name="individual-process-testing-examples"></a>
+#### Usage examples of individual process testing with runner option
 
 The individual process tests can be run by specifying the `src/openeo_test_suite/tests/processes/processing` as test path.
 Some use examples with different options discussed above:
@@ -245,32 +300,48 @@ pytest --runner=dask src/openeo_test_suite/tests/processes
 
 
 
+### WP6. Full process graph execution and validation <a name="wp6-specifics"></a>
+
+These tests are designed to run using synchronous openEO process calls
+and a Sentinel-2(-like) collection.
+
+The S2 collection to use must be specified through the `--s2-collection` option,
+which supports two forms:
+
+- a normal openEO collection name (e.g. `--s2-collection=SENTINEL2_L2A`)
+  which will be loaded through the standard openEO `load_collection` process.
+- a STAC URL (typically starting with `https://`),
+  which will be loaded with `load_stac`.
+
+  The following two example STAC collections are provided in the context of this test suite project.
+  Each of these exists to cater to subtle differences between some back-end implementations
+  regarding temporal and band dimension naming and how that is handled in `load_stac`.
+   - https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE:
+     defines `"t"` as temporal dimension name, and `"bands"` as bands dimension name.
+     Recommended to be used with VITO/CDSE openEO backends.
+   - https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE_2:
+     uses `"time"` as temporal dimension name, and `"band"` as bands dimension name.
+     Recommended to be used with EURAC and EODC openEO backends.
+
+If the back-end does not support `load_stac`, a collection name must be used.
+
+#### Usage examples:
+
+```bash
+# Compact
+pytest src/openeo_test_suite/tests/workflows \
+    -U openeo.dataspace.copernicus.eu \
+    --s2-collection=SENTINEL2_L2A
+
+# With full back-end URL, a STAC collection to use instead of a predefined openEO collection
+# and a list of process levels to test against
+pytest src/openeo_test_suite/tests/workflows \
+    --openeo-backend-url=https://openeo.dataspace.copernicus.eu/openeo/1.2 \
+    --s2-collection=https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE \
+    --process-levels=L1,L2
+```
 
 
-## Authentication of the basic `connection` fixture
-
-The test suite provides a basic `connection` fixture
-(an `openeo.Connection` object as defined in the `openeo` Python library package)
-to interact with the backend.
-
-There are several ways to set up authentication for this connection fixture,
-building on the ["dynamic authentication method selection" feature of the `openeo` Python library package](https://open-eo.github.io/openeo-python-client/auth.html#oidc-authentication-dynamic-method-selection),
-which is driven by the `OPENEO_AUTH_METHOD` environment variable:
-
-- `OPENEO_AUTH_METHOD=none`: no authentication will be done
-- `OPENEO_AUTH_METHOD=basic`: basic authentication will be triggered.
-  Username and password can be specified through additional environment variables
-  `OPENEO_AUTH_BASIC_USERNAME`, and `OPENEO_AUTH_BASIC_PASSWORD`.
-  Alternatively, it is also possible to handle basic auth credentials through
-  the [auth configuration system and `openeo-auth` tool](https://open-eo.github.io/openeo-python-client/auth.html#auth-config-files-and-openeo-auth-helper-tool)
-  from the `openeo` Python library package.
-- `OPENEO_AUTH_METHOD=client_credentials`: OIDC with "client credentials" grant,
-  which [assumes some additional environment variables to set the client credentials](https://open-eo.github.io/openeo-python-client/auth.html#oidc-client-credentials-using-environment-variables).
-- If nothing is specified (the default), the default behavior of `connection.authenticate_oidc()` is followed:
-  - Valid OIDC refresh tokens will be used if available
-  - Otherwise, the OIDC device code flow is initiated.
-    Make sure to check the logging/output of the test suite run
-    for instructions on how to complete the authentication flow.
 
 
 ## Reporting
@@ -305,7 +376,6 @@ Some general guidelines:
   extend existing tests or add new tests at `src/openeo_test_suite/tests/collections`.
 - Validation of process metadata:
   add new tests to `src/openeo_test_suite/tests/processes/metadata`.
-  - TODO: [Open-EO/openeo-test-suite#19](https://github.com/Open-EO/openeo-test-suite/issues/19)
 - General openEO API compliance validation:
   - TODO: [Open-EO/openeo-test-suite#20](https://github.com/Open-EO/openeo-test-suite/issues/20)
 - Individual process testing:

@@ -6,6 +6,7 @@ import openeo
 import pytest
 import pytest_metadata.plugin
 
+import openeo_test_suite
 from openeo_test_suite.lib.backend_under_test import (
     HttpBackend,
     NoBackend,
@@ -81,9 +82,12 @@ def pytest_configure(config: pytest.Config):
 
     set_process_selection_from_config(config)
 
-    # Add invocation info to HTML report
+    # Add some additional info to HTML report
     # https://pytest-html.readthedocs.io/en/latest/user_guide.html#environment
     config.stash[pytest_metadata.plugin.metadata_key]["Invocation"] = _invocation()
+    config.stash[pytest_metadata.plugin.metadata_key][
+        "openEO Test Suite version"
+    ] = openeo_test_suite.__version__
 
 
 def _invocation() -> str:
@@ -93,9 +97,10 @@ def _invocation() -> str:
 
 def pytest_report_header(config: pytest.Config):
     """Implementation of `pytest_report_header` hook."""
+    # Add info to terminal report
     return [
-        # Add invocation info to terminal report
-        f"Invoked with: {_invocation()}"
+        f"openEO Test Suite {openeo_test_suite.__version__}",
+        f"Invoked with: {_invocation()}",
     ]
 
 

@@ -1,32 +1,10 @@
 # Tests for full openEO workflows (process graphs)
 
-The tests are designed to run using [synchronous calls](https://open-eo.github.io/openeo-python-client/basics.html#download-synchronously) and a Sentinel-2 Collection.
 
-Usage examples:
+## Development/status notes
 
-```bash
-# Compact
-pytest --openeo-backend-url=openeo.dataspace.copernicus.eu --s2-collection=SENTINEL2_L2A
-
-# With full back-end URL, a STAC collection to use instead of a predefined openEO collection
-# and a list of process levels to test against
-pytest --openeo-backend-url=https://openeo.dataspace.copernicus.eu/openeo/1.2 \
-    --s2-collection=https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE \
-    --process-levels=L1,L2,L3
-```
-
-Parameters:
-
-- `--s2-collection`: the data collection to test against. It can be either a Sentinel-2 STAC Collection or the name of an openEO Sentinel-2 Collection provided by the back-end.
-- `--process-levels`: all process profiles to test against, separated by comma. You need to list all levels explicitly, e.g., L2 does not include L1 automatically. Example: L1,L2,L3. By default tests against all processes.
-
-
-## Notes
-
-- Only the workflows containing processes that are exposed under the `/processes` endpoint are tested. If `load_stac` is not available, the `--s2-collection` parameter must be set to an existing openEO S2 collection.
-
-- Tests are divided by process levels, defined [here](https://openeo.org/documentation/1.0/developers/profiles/processes.html).
-
+The following notes give a snapshot of the status of the workflow tests
+around the development time of this test suite module (Dec 2023).
 
 ### VITO
 
@@ -104,10 +82,3 @@ FAILED test_load_save.py::test_load_save_geotiff - openeo.rest.OpenEoApiError: [
 ```
 ========= 10 failed, 1 error in 13.50s ==========
 ```
-
-
-### Additional Info
-
-The reason behind the creation of two test collections is due to the fact of non-optimal implementation of the `load_stac` process in the various back-ends.
-1. CDSE and VITO load the data assigning to the temporal dimension the `t` label and to the bands dimension the `bands` label. To test this back-end it is necessary to use the https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE collection.
-2. EURAC and EODC load the data assigning to the temporal dimension the `time` label and to the bands dimension the `band` label. To test this back-end it is necessary to use the https://stac.eurac.edu/collections/SENTINEL2_L2A_SAMPLE_2 collection.
