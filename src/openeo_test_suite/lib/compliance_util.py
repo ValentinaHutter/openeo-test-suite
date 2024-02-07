@@ -16,7 +16,7 @@ from openeo_test_suite.lib.backend_under_test import (
 from openapi_core import validate_response
 from openapi_core.contrib.requests import RequestsOpenAPIRequest
 from openapi_core.contrib.requests import RequestsOpenAPIResponse
-from openapi_core import V30ResponseValidator
+from openapi_core import V31ResponseValidator
 
 
 def test_endpoint(
@@ -121,7 +121,7 @@ def test_endpoint(
     try:
         if check_status_code(expected_status_codes, openapi_response.status_code):
             validate_response(
-                openapi_request, openapi_response, spec=spec, cls=V30ResponseValidator
+                openapi_request, openapi_response, spec=spec, cls=V31ResponseValidator
             )
         else:
             raise UnexpectedStatusCodeException(

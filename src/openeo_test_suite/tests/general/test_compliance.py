@@ -5,9 +5,6 @@ import openeo_test_suite.lib.compliance_util as conformance_util
 import uuid
 
 
-# region Test Fixtures
-
-
 @pytest.fixture(scope="session")
 def base_url(request):
     return conformance_util.get_base_url(request=request)
@@ -31,11 +28,6 @@ def spec(request):
 def bearer_token(pytestconfig):
     bearer_token = conformance_util.get_access_token(pytestconfig)
     return f"Bearer {bearer_token}"
-
-
-# endregion
-
-# region Test Implementations
 
 
 def test_GET_backend_info(base_url: str, spec: Spec, bearer_token: str):
@@ -689,9 +681,7 @@ def test_POST_jobs_job_id_results(base_url: str, spec: Spec, bearer_token: str):
 
 
 @pytest.mark.vv
-@pytest.mark.skip(
-    reason="Takes too long for normal test runs, this decorator can be removed when fully testing is relevant"
-)
+@pytest.mark.longrunning
 def test_GET_jobs_job_id_results(base_url: str, spec: Spec, bearer_token: str):
     """
     SETUP: POST jobs, START jobs (POST jobs/job_id/results), Wait for jobs to be finished
@@ -869,9 +859,7 @@ def test_GET_jobs_job_id_logs(base_url: str, spec: Spec, bearer_token: str):
     assert fail_log == ""
 
 
-@pytest.mark.skip(
-    reason="Takes too long for normal test runs, this decorator can be removed when fully testing is relevant"
-)
+@pytest.mark.longrunning
 def test_POST_result(base_url: str, spec: Spec, bearer_token: str):
     """
     SETUP: gather payloads
@@ -946,11 +934,6 @@ def test_POST_validation(base_url: str, spec: Spec, bearer_token: str):
     # CLEANUP
 
     assert fail_log == ""
-
-
-# endregion
-
-# region Negative Test Implementations
 
 
 def test_none_PUT_process_graphs_process_id(
@@ -1226,9 +1209,7 @@ def test_negative_GET_jobs_job_id_logs(base_url: str, spec: Spec, bearer_token: 
     assert fail_log == ""
 
 
-@pytest.mark.skip(
-    reason="Takes too long for normal test runs, this decorator can be removed when fully testing is relevant"
-)
+@pytest.mark.longrunning
 def test_none_POST_result(base_url: str, spec: Spec, bearer_token: str):
     """
     SETUP: gather payloads
@@ -1411,9 +1392,7 @@ def test_empty_PATCH_jobs_job_id(base_url: str, spec: Spec, bearer_token: str):
     assert fail_log == ""
 
 
-@pytest.mark.skip(
-    reason="Takes too long for normal test runs, this decorator can be removed when fully testing is relevant"
-)
+@pytest.mark.longrunning
 def test_empty_POST_result(base_url: str, spec: Spec, bearer_token: str):
     """
     SETUP: gather payloads
