@@ -1,6 +1,6 @@
 from pathlib import Path
 import pathlib
-from typing import Union
+from typing import Iterator, Union
 from openapi_core import Spec
 import yaml
 import json
@@ -215,6 +215,13 @@ def check_test_results(e: Exception):
     return fail_log
 
 
+# Server field in the spec has to be adjusted so that validation does not fail on the server url
+def adjust_spec(path_to_file: str, endpoint: str, domain: str):
+    data = adjust_server(path_to_file=path_to_file, endpoint=endpoint)
+    data = adjust_server_in_well_known(data=data, endpoint=domain)
+    return Spec.from_dict(data, validator=None)
+
+
 def adjust_server(path_to_file, endpoint):
     with open(path_to_file, "r") as file:
         data = yaml.safe_load(file)
@@ -226,15 +233,8 @@ def adjust_server(path_to_file, endpoint):
     return data
 
 
-def adjust_spec(path_to_file: str, endpoint: str, domain: str):
-    data = adjust_server(path_to_file=path_to_file, endpoint=endpoint)
-    data = adjust_server_in_well_known(data=data, endpoint=domain)
-    return Spec.from_dict(data, validator=None)
-
-
 def adjust_server_in_well_known(data, endpoint):
     data["paths"]["/.well-known/openeo"]["get"]["servers"][0]["url"] = endpoint
-
     return data
 
 
@@ -260,12 +260,6 @@ extra_format_unmarshallers = {
 }
 
 
-def get_examples_path():
-    return os.path.join(
-        os.getcwd(), "src/openeo_test_suite/tests/general/payload_examples"
-    )
-
-
 def _guess_root():
     project_root = Path(openeo_test_suite.__file__).parents[2]
     candidates = [
@@ -281,12 +275,23 @@ def _guess_root():
     )
 
 
+def get_examples_path():
+    return (
+        _guess_root().parents[2]
+        / "src"
+        / "openeo_test_suite"
+        / "tests"
+        / "general"
+        / "payload_examples"
+    )
+
+
 def get_spec_path():
     return _guess_root() / "openapi.yaml"
 
 
-def load_payloads_from_directory(directory_path: str) -> list[dict]:
-    for filename in pathlib.Path.glob(directory_path, "*.json"):
+def load_payloads_from_directory(directory_path: str) -> Iterator[str]:
+    for filename in pathlib.Path(directory_path).glob("*.json"):
         file_path = os.path.join(directory_path, filename)
         with open(file_path, "r") as file:
             try:
