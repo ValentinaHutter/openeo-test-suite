@@ -5,3 +5,6 @@
 [submodule "src/openeo_test_suite/tests/general/openeo-api"]
 	path = src/openeo_test_suite/tests/general/openeo-api
 	url = git@github.com:Open-EO/openeo-api.git
+[submodule "assets/openeo-api"]
+	path = assets/openeo-api
+	url = git@github.com:Open-EO/openeo-api.git
