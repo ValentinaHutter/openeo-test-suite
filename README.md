@@ -40,7 +40,23 @@ focussing on a specific API aspect to test or verify
     ```
 - **WP3 Validation of process metadata** (lead implementation partner: EODC)
   - Main location: [`src/openeo_test_suite/tests/processes/metadata`](./src/openeo_test_suite/tests/processes/metadata)
-  - TODO: [Open-EO/openeo-test-suite#19](https://github.com/Open-EO/openeo-test-suite/issues/19)
+  - Defines tests to validate openEO process metadata against specs
+    defined in the [openeo-processes](https://github.com/Open-EO/openeo-processes) project
+  - Functional tests concern actual values and behavior of processes (like parameters and return values),
+    failures in these tests should be looked into and fixed.
+  - Non-functional tests concern descriptions and other metadata of processes that have no impact on the actual behavior of the process,
+    failures in these tests should be taken as warnings, but don't necessarily need to be fixed. These can be skipped by adding
+    '-m "not optional"' to the pytest command.
+  - Usage example for running these tests against a desired openEO backend URL:
+    ```bash
+    pytest src/openeo_test_suite/tests/processes/metadata \
+      --html=reports/process-metadata.html \
+      --openeo-backend-url=openeo.example \
+      --tb=no \
+      -vv
+    ```
+    It is recommended to run these tests with the `--tb=no` option to avoid excessive output of no substance.
+    and the `-vv` option to get more detailed output.
 - **WP4 General openEO API compliance validation** (lead implementation partner: EODC)
   - TODO: [Open-EO/openeo-test-suite#20](https://github.com/Open-EO/openeo-test-suite/issues/20)
 - **WP5 Individual process testing** (lead implementation partner: M. Mohr)
@@ -352,7 +368,6 @@ Some general guidelines:
   extend existing tests or add new tests at `src/openeo_test_suite/tests/collections`.
 - Validation of process metadata:
   add new tests to `src/openeo_test_suite/tests/processes/metadata`.
-  - TODO: [Open-EO/openeo-test-suite#19](https://github.com/Open-EO/openeo-test-suite/issues/19)
 - General openEO API compliance validation:
   - TODO: [Open-EO/openeo-test-suite#20](https://github.com/Open-EO/openeo-test-suite/issues/20)
 - Individual process testing:
