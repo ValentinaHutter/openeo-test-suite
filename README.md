@@ -46,17 +46,13 @@ focussing on a specific API aspect to test or verify
     failures in these tests should be looked into and fixed.
   - Non-functional tests concern descriptions and other metadata of processes that have no impact on the actual behavior of the process,
     failures in these tests should be taken as warnings, but don't necessarily need to be fixed. These can be skipped by adding
-    '-m "not optional"' to the pytest command.
+    `-m "not optional"` to the pytest command.
   - Usage example for running these tests against a desired openEO backend URL:
     ```bash
     pytest src/openeo_test_suite/tests/processes/metadata \
-      --html=reports/process-metadata.html \
-      --openeo-backend-url=openeo.example \
-      --tb=no \
-      -vv
+      -U openeo.example \
+      --html=reports/process-metadata.html
     ```
-    It is recommended to run these tests with the `--tb=no` option to avoid excessive output of no substance.
-    and the `-vv` option to get more detailed output.
 - **WP4 General openEO API compliance validation** (lead implementation partner: EODC)
   - TODO: [Open-EO/openeo-test-suite#20](https://github.com/Open-EO/openeo-test-suite/issues/20)
 - **WP5 Individual process testing** (lead implementation partner: M. Mohr)
@@ -195,6 +191,18 @@ If both are specified, the union of both will be considered.
   Enabling this option will consider experimental processes and tests.
   Note that experimental processes explicitly selected with `--processes` will be
   kept irrespective of this option.
+
+
+### Recommended `pytest` options
+
+pytest provides a [lot of command-line options](https://docs.pytest.org/en/8.0.x/reference/reference.html#command-line-flags)
+to fine-tune how the test suite is executed (test selection, reporting, ...).
+Some recommended options to use in practice:
+
+- `-vv`: increase verbosity while running the test,
+  e.g. to have a better idea of the progress of slow tests.
+- `--tb=no`: avoid output of full stack traces,
+  which give little to no added value for some test modules.
 
 
 ### Authentication of the basic `connection` fixture
