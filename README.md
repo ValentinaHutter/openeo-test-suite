@@ -201,7 +201,7 @@ Some recommended options to use in practice:
 
 - `-vv`: increase verbosity while running the test,
   e.g. to have a better idea of the progress of slow tests.
-- `--tb=no`: avoid output of full stack traces,
+- `--tb=short`/`--tb=line`/`--tb=no`: avoid output of full stack traces,
   which give little to no added value for some test modules.
 
 
