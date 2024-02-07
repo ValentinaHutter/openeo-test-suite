@@ -53,3 +53,6 @@ addopts = [
 filterwarnings = [
     "ignore:(pkg_resources|jsonschema.RefResolver):DeprecationWarning",
 ]
+markers = [
+    "optional: marks optional tests (deselect with '-m \"not optional\"')",
+]
