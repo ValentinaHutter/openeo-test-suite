@@ -54,7 +54,17 @@ focussing on a specific API aspect to test or verify
       --html=reports/process-metadata.html
     ```
 - **WP4 General openEO API compliance validation** (lead implementation partner: EODC)
-  - TODO: [Open-EO/openeo-test-suite#20](https://github.com/Open-EO/openeo-test-suite/issues/20)
+  - Main location: [`src/openeo_test_suite/tests/general`](./src/openeo_test_suite/tests/general)
+  - Provides tests to validate the general openEO API compliance of a back-end.
+  - The backend is checked against the openeo API specification defined in the [openeo-api](https://github.com/Open-EO/openeo-api/).
+  - There are some tests which might run for a long time (as they running process_graphs on the backends) these can be skippied by adding
+    `-m "not longrunning"` to the pytest command.
+  - Usage example of just running these tests against a desired openEO backend URL:
+    ```bash
+    pytest src/openeo_test_suite/tests/general \
+      -U https://openeo.example \
+      --html=reports/general.html
+    ```
 - **WP5 Individual process testing** (lead implementation partner: M. Mohr)
   - Main location: [`src/openeo_test_suite/tests/processes/processing`](./src/openeo_test_suite/tests/processes/processing)
   - Provides tests to validate individual openEO processes,
@@ -377,7 +387,7 @@ Some general guidelines:
 - Validation of process metadata:
   add new tests to `src/openeo_test_suite/tests/processes/metadata`.
 - General openEO API compliance validation:
-  - TODO: [Open-EO/openeo-test-suite#20](https://github.com/Open-EO/openeo-test-suite/issues/20)
+  add new tests to `src/openeo_test_suite/tests/general`.
 - Individual process testing:
   - new input-output pairs for existing or new processes:
     add them in the [openeo-processes](https://github.com/Open-EO/openeo-processes) project
