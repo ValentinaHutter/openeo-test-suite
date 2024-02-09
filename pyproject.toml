@@ -56,4 +56,5 @@ filterwarnings = [
 ]
 markers = [
     "optional: marks optional tests (deselect with '-m \"not optional\"')",
+    "longrunning: marks long running tests (deselect with '-m \"not longrunning\"')",
 ]
