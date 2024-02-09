@@ -22,6 +22,8 @@ from openeo_test_suite.lib.backend_under_test import (
     get_backend_url,
 )
 
+_log = logging.getLogger(__name__)
+
 
 def test_endpoint(
     base_url: str,
@@ -128,8 +130,8 @@ def wait_job_statuses(
         ):
             return True
         time.sleep(1)
-        logging.log("Waiting on jobs to reach desired status..")
-    logging.warn("Jobs failed to reach desired state, timeout has been reached.")
+        _log.info("Waiting on jobs to reach desired status..")
+    _log.warning("Jobs failed to reach desired state, timeout has been reached.")
     return False
 
 
@@ -294,9 +296,9 @@ def load_payloads_from_directory(directory_path: str) -> Iterator[str]:
                 data = json.load(file)
                 yield json.dumps(data)
             except json.JSONDecodeError:
-                logging.error(f"Error decoding JSON in file: {filename}")
+                _log.error(f"Error decoding JSON in file: {filename}")
             except Exception as e:
-                logging.error(f"Error reading file: {filename} - {str(e)}")
+                _log.error(f"Error reading file: {filename} - {str(e)}")
 
 
 def set_uuid_in_job(json_data):
@@ -320,7 +322,7 @@ def delete_id_resource(
                 headers={"Authorization": f"{bearer_token}"},
             )
         except Exception as e:
-            logging.error(f"Failed to delete resource with id {id}: {e}")
+            _log.error(f"Failed to delete resource with id {id}: {e}")
 
 
 def put_process_graphs(base_url: str, bearer_token: str):  # TODO id and so forth

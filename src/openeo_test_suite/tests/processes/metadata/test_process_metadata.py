@@ -6,6 +6,8 @@ import pytest
 from openeo_test_suite.lib.process_registry import ProcessData
 from openeo_test_suite.lib.process_selection import get_selected_processes
 
+_log = logging.getLogger(__name__)
+
 
 @pytest.fixture(scope="module")
 def api_processes(connection) -> List[dict]:
@@ -45,7 +47,7 @@ def test_process_metadata_functional(api_processes, expected_process, skipper):
     actual_parameters = actual_process["parameters"]
 
     if len(expected_parameters) > len(actual_parameters):
-        logging.warn(
+        _log.warning(
             f"Process {expected_process.process_id} has {len(expected_parameters)} expected parameters, but only {len(actual_parameters)} actual parameters"
         )
         for expected_parameter in expected_parameters[len(actual_parameters) :]:
@@ -54,7 +56,7 @@ def test_process_metadata_functional(api_processes, expected_process, skipper):
             ), f"Missing Parameter {expected_parameter} has no default value. Cannot remove required parameters."
 
     if len(expected_parameters) < len(actual_parameters):
-        logging.warn(
+        _log.warning(
             f"Process {expected_process.process_id} has {len(expected_parameters)} expected parameters, but {len(actual_parameters)} actual parameters"
         )
         for actual_parameter in actual_parameters[len(expected_parameters) :]:
