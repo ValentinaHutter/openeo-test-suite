@@ -3,7 +3,7 @@
 
 Test suite for validation of openEO back-ends against the openEO API and related specifications.
 
-
+Location: https://github.com/Open-EO/openeo-test-suite
 
 ## Project structure and modular design
 
@@ -42,23 +42,24 @@ focussing on a specific API aspect to test or verify
   - Main location: [`src/openeo_test_suite/tests/processes/metadata`](./src/openeo_test_suite/tests/processes/metadata)
   - Defines tests to validate openEO process metadata against specs
     defined in the [openeo-processes](https://github.com/Open-EO/openeo-processes) project
-  - Functional tests concern actual values and behavior of processes (like parameters and return values),
-    failures in these tests should be looked into and fixed.
-  - Non-functional tests concern descriptions and other metadata of processes that have no impact on the actual behavior of the process,
-    failures in these tests should be taken as warnings, but don't necessarily need to be fixed. These can be skipped by adding
-    `-m "not optional"` to the pytest command.
+    - Functional tests concern actual values and behavior of processes (like parameters and return values),
+      failures in these tests should be looked into and fixed.
+    - Non-functional tests concern descriptions and other metadata of processes that have no impact on the actual behavior of the process,
+      failures in these tests should be taken as warnings, but don't necessarily need to be fixed. These can be skipped by adding
+      `-m "not optional"` to the pytest command.
   - Usage example for running these tests against a desired openEO backend URL:
     ```bash
     pytest src/openeo_test_suite/tests/processes/metadata \
-      -U openeo.example \
+      -U https://openeo.example \
+      -m "not optional" \
       --html=reports/process-metadata.html
     ```
 - **WP4 General openEO API compliance validation** (lead implementation partner: EODC)
   - Main location: [`src/openeo_test_suite/tests/general`](./src/openeo_test_suite/tests/general)
   - Provides tests to validate the general openEO API compliance of a back-end.
-  - The backend is checked against the openeo API specification defined in the [openeo-api](https://github.com/Open-EO/openeo-api/).
-  - There are some tests which might run for a long time (as they running process_graphs on the backends) these can be skippied by adding
-    `-m "not longrunning"` to the pytest command.
+  - The backend is checked against the openeo API specification defined in the [openeo-api](https://github.com/Open-EO/openeo-api/) project.
+  - There are some tests which might run for a long time (as they execute actual process graphs on the backends)
+    these can be skipped by adding `-m "not longrunning"` to the pytest command.
   - Usage example of just running these tests against a desired openEO backend URL:
     ```bash
     pytest src/openeo_test_suite/tests/general \
