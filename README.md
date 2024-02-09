@@ -347,7 +347,8 @@ pytest src/openeo_test_suite/tests/workflows \
     -U openeo.dataspace.copernicus.eu \
     --s2-collection=SENTINEL2_L2A
 
-# With full back-end URL, a STAC collection to use instead of a predefined openEO collection
+# With full back-end URL,
+# a STAC collection to use instead of a predefined openEO collection
 # and a list of process levels to test against
 pytest src/openeo_test_suite/tests/workflows \
     --openeo-backend-url=https://openeo.dataspace.copernicus.eu/openeo/1.2 \
