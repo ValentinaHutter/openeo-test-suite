@@ -35,8 +35,8 @@ focussing on a specific API aspect to test or verify
   - Usage example of just running these tests against a desired openEO backend URL:
     ```bash
     pytest src/openeo_test_suite/tests/collections \
-      -U https://openeo.example \
-      --html=reports/collection-metadata.html
+        -U https://openeo.example \
+        --html=reports/collection-metadata.html
     ```
 - **WP3 Validation of process metadata** (lead implementation partner: EODC)
   - Main location: [`src/openeo_test_suite/tests/processes/metadata`](./src/openeo_test_suite/tests/processes/metadata)
@@ -50,9 +50,9 @@ focussing on a specific API aspect to test or verify
   - Usage example for running these tests against a desired openEO backend URL:
     ```bash
     pytest src/openeo_test_suite/tests/processes/metadata \
-      -U https://openeo.example \
-      -m "not optional" \
-      --html=reports/process-metadata.html
+        -U https://openeo.example \
+        -m "not optional" \
+        --html=reports/process-metadata.html
     ```
 - **WP4 General openEO API compliance validation** (lead implementation partner: EODC)
   - Main location: [`src/openeo_test_suite/tests/general`](./src/openeo_test_suite/tests/general)
@@ -75,7 +75,7 @@ focussing on a specific API aspect to test or verify
   - Very basic usage example of just running these tests:
     ```bash
     pytest src/openeo_test_suite/tests/processes/processing \
-      --html=reports/individual-processes.html
+        --html=reports/individual-processes.html
     ```
     Note that this invocation will not actually execute anything,
     see [WP5 Specifics](#wp5-specifics) for more information and functional examples.
@@ -85,9 +85,9 @@ focussing on a specific API aspect to test or verify
   - Usage example of just running these tests against a desired openEO backend URL:
     ```bash
     pytest src/openeo_test_suite/tests/workflows \
-      -U https://openeo.example \
-      --s2-collection SENTINEL2_L2A \
-      --html=reports/workflows.html
+        -U https://openeo.example \
+        --s2-collection SENTINEL2_L2A \
+        --html=reports/workflows.html
     ```
    - See [WP6 Specifics](#wp6-specifics) for some more details and examples.
 
@@ -300,10 +300,13 @@ pytest src/openeo_test_suite/tests/processes
 
 # Run tests for a subset of processes with the HTTP runner
 # against the openEO Platform backend at openeo.cloud
-pytest --runner=http --openeo-backend-url=openeo.cloud --processes=min,max src/openeo_test_suite/tests/processes/processing
+pytest --runner=http --openeo-backend-url=openeo.cloud \
+    --processes=min,max \
+    src/openeo_test_suite/tests/processes/processing
 
 # Run tests for a subset of processes with the VITO runner
-pytest --runner=vito --process-levels=L1,L2,L2A src/openeo_test_suite/tests/processes/processing
+pytest --runner=vito --process-levels=L1,L2,L2A \
+    src/openeo_test_suite/tests/processes/processing
 
 # Run all individual process tests with the Dask runner
 pytest --runner=dask src/openeo_test_suite/tests/processes
