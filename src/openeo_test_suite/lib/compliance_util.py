@@ -1,31 +1,26 @@
-from pathlib import Path
-import pathlib
-from typing import Iterator, Union
-from openapi_core import Spec
-import yaml
 import json
-import os
-import uuid
-import requests
-import time
 import logging
-import openeo_test_suite
+import os
+import pathlib
+import time
+import uuid
+from pathlib import Path
+from typing import Iterator, Union
 
-from openeo_test_suite.lib.backend_under_test import (
-    get_backend_url,
-    get_backend_under_test,
-)
-
-
-from openapi_core import validate_response
-from openapi_core.contrib.requests import RequestsOpenAPIRequest
-from openapi_core.contrib.requests import RequestsOpenAPIResponse
-from openapi_core import V31ResponseValidator
-
-
-from typing import Union
 import requests
+import yaml
+from openapi_core import Spec, V31ResponseValidator, validate_response
+from openapi_core.contrib.requests import (
+    RequestsOpenAPIRequest,
+    RequestsOpenAPIResponse,
+)
 from requests import Request, Session
+
+import openeo_test_suite
+from openeo_test_suite.lib.backend_under_test import (
+    get_backend_under_test,
+    get_backend_url,
+)
 
 
 def test_endpoint(

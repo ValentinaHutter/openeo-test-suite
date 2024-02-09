@@ -1,8 +1,10 @@
-from openapi_core import Spec
+import uuid
+
 import pytest
 import requests
+from openapi_core import Spec
+
 import openeo_test_suite.lib.compliance_util as conformance_util
-import uuid
 
 
 @pytest.fixture(scope="session")

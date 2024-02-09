@@ -1,8 +1,10 @@
+import logging
 from typing import List
+
 import pytest
+
 from openeo_test_suite.lib.process_registry import ProcessData
 from openeo_test_suite.lib.process_selection import get_selected_processes
-import logging
 
 
 @pytest.fixture(scope="module")
