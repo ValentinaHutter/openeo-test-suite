@@ -777,6 +777,13 @@ def test_DELETE_jobs_job_id_results(base_url: str, spec: Spec, bearer_token: str
 
     # CLEANUP
 
+    conformance_util.delete_id_resource(
+        base_url=base_url,
+        endpoint_path=endpoint_path,
+        bearer_token=bearer_token,
+        ids=created_batch_job_ids,
+    )
+
     assert fail_log == ""
 
 
