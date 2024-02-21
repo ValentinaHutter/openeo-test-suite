@@ -1292,7 +1292,7 @@ def test_empty_PUT_process_graphs_process_id(
         conformance_util.load_payloads_from_directory(
             directory_path=directory_path / examples_directory
         )
-    )
+    )[0]
 
     # TESTING
 
@@ -1310,6 +1310,13 @@ def test_empty_PUT_process_graphs_process_id(
     )
 
     # CLEANUP
+
+    conformance_util.delete_id_resource(
+        base_url=base_url,
+        endpoint_path=endpoint_path,
+        bearer_token=bearer_token,
+        ids=[id],
+    )
 
     assert fail_log == ""
 
