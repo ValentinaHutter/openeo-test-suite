@@ -498,7 +498,10 @@ def test_POST_jobs(base_url: str, spec: Spec, bearer_token: str):
         )
 
         fail_log += fail_log_entry
-        created_batch_job_ids.append(response.headers["OpenEO-Identifier"])
+        if "OpenEO-Identifier" in response.headers:
+            created_batch_job_ids.append(response.headers["OpenEO-Identifier"])
+        else:
+            fail_log += "No OpenEO-Identifier in response headers, job id not found"
 
     # CLEANUP
     conformance_util.delete_id_resource(
@@ -578,6 +581,7 @@ def test_PATCH_jobs_job_id(base_url: str, spec: Spec, bearer_token: str):
     # TESTING
 
     for job_id, payload in zip(created_batch_job_ids, payloads):
+        _, payload = conformance_util.set_uuid_in_job(payload)
         prepared_endpoint_path = f"{endpoint_path}/{job_id}"
         fail_log += conformance_util.test_endpoint(
             base_url=base_url,
@@ -772,13 +776,6 @@ def test_DELETE_jobs_job_id_results(base_url: str, spec: Spec, bearer_token: str
         )
 
     # CLEANUP
-
-    conformance_util.delete_id_resource(
-        base_url=base_url,
-        endpoint_path=endpoint_path,
-        bearer_token=bearer_token,
-        ids=created_batch_job_ids,
-    )
 
     assert fail_log == ""
 
@@ -1284,9 +1281,9 @@ def test_empty_PUT_process_graphs_process_id(
     directory_path = conformance_util.get_examples_path()
     examples_directory = "empty_payload"
 
-    payload = next(
+    payload = list(
         conformance_util.load_payloads_from_directory(
-            directory_path=f"{directory_path}/{examples_directory}"
+            directory_path=directory_path / examples_directory
         )
     )
 
