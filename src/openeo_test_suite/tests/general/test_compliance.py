@@ -757,7 +757,7 @@ def test_DELETE_jobs_job_id_results(base_url: str, spec: Spec, bearer_token: str
         base_url=base_url,
         bearer_token=bearer_token,
         job_ids=created_batch_job_ids,
-        job_statuses=["queued", "running"],
+        job_statuses=["running"],
         timeout=120,
     )
 
