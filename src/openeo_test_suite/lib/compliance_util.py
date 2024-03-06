@@ -287,7 +287,7 @@ def get_spec_path():
     return _guess_root() / "openapi.yaml"
 
 
-def load_payloads_from_directory(directory_path: str) -> Iterator[str]:
+def load_payloads_from_directory(directory_path: str) -> Iterator[dict]:
     for filename in pathlib.Path(directory_path).glob("*.json"):
         file_path = os.path.join(directory_path, filename)
         with open(file_path, "r") as file:
