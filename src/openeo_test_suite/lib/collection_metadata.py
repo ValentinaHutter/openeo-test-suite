@@ -5,7 +5,7 @@ _log = logging.getLogger(__name__)
 
 
 class OpeneoApiCollectionTests:
-    # TODO: This OOP pattern is not necessary, this can just be a bunch of functions. These addition layers leak into the test report, making it harder to read.
+    # TODO: This OOP pattern is not necessary, this can just be a bunch of functions. These additional layers leak into the test report, making it harder to read.
     # TODO: Also, it's not necessary to define this in a separate file, it can just be a function in the test file
     def __init__(self, collection):
         self.test_stac_version(collection)
