@@ -118,5 +118,8 @@ class OpeneoApiCollectionTests:
         """
         if "assets" in collection:
             assert isinstance(collection["assets"], dict)
-            if collection["stac_version"].startswith("0."):
+
+            # Note: the "collection-assets" (core) extension is required per openEO spec for STAC < 1.0.0-rc.1,
+            # but it was only introduced by STAC 1.0.0-beta.1, so we actually just check for the two beta versions before rc.1:
+            if collection["stac_version"] in {"1.0.0-beta.1", "1.0.0-beta.2"}:
                 assert "collection-assets" in collection["stac_extensions"]
