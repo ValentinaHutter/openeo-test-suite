@@ -18,6 +18,7 @@ def load_netcdf_dataarray(
         # VITO/CDSE write a Dataset even if there are no bands, with a default name 'var'
         if len(data.data_vars) == 1 and [v for v in data.data_vars] == ["var"]:
             data = data["var"]
+        # EODC write a Dataset even if there are no bands, with a default name 'name'
         elif len(data.data_vars) == 1 and [v for v in data.data_vars] == ["name"]:
             data = data["name"]
         else:
